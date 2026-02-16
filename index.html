@@ -19,15 +19,10 @@ input[type="text"] {
 button {
   display:block; width:80%; max-width:350px; margin:8px auto; padding:16px;
   font-size:18px; border:none; border-radius:12px; cursor:pointer; background:#e10600; color:white;
-  position: relative; transition:0.2s;
+  transition:0.2s;
 }
 button:hover { background:#ff3b30; }
 button:disabled { background: gray; cursor:not-allowed; }
-.countdown {
-  position:absolute; top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  font-size:18px; color:#ff0; pointer-events:none;
-}
 .rankItem { font-size:22px; margin:6px 0; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
@@ -56,6 +51,17 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// RESET SECRETO VIA URL
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.get("reset") === "12345"){
+  database.ref("ranking").set({}).then(()=>{
+    alert("Votos zerados!"); 
+    window.location.href = window.location.origin + window.location.pathname;
+  }).catch(err=>{
+    console.error("Erro ao zerar votos:", err);
+  });
+}
+
 // TODAS AS MÚSICAS CATEGORIZADAS
 const musicas = {
   "Rock Nacional": {
@@ -78,6 +84,7 @@ const musicas = {
     "Pink Floyd":["Wish You Were Here"],
     "Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
     "Foo Fighters":["Everlong"],
+    "Commodores":["Easy"],
     "Radiohead":["Creep"],
     "Tears For Fears":["Everybody Wants To Rule The World"],
     "Daft Punk":["Get Lucky"],
@@ -88,8 +95,6 @@ const musicas = {
     "INXS":["Never Tear Us Apart","Need You Tonight"],
     "Led Zeppelin":["Immigrant Song","Rock And Roll"],
     "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
-    "The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
-    "The White Stripes":["Seven Nation Army"],
     "Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
     "Black Sabbath":["Paranoid"],
     "Stone Temple Pilots":["Plush","Interstate Love Song","Creep"],
@@ -98,7 +103,6 @@ const musicas = {
     "Tom Petty":["Runnin' Down A Dream"],
     "Foghat":["Slow Ride"],
     "Phil Collins":["I Don't Care Anymore"],
-    "Cazuza":["Exagerado"],
     "Foreigner":["I Want To Know What Love Is"],
     "The Outfield":["Your Love"],
     "Modjo":["Lady"],
@@ -111,7 +115,6 @@ const musicas = {
     "Oasis":["Wonderwall"],
     "Maroon 5":["Sugar"],
     "Kings of Leon":["Closer"],
-    "Natalie Imbruglia":["Torn"],
     "Green Day":["American Idiot"],
     "The Smashing Pumpkins":["1979"]
   },
@@ -126,7 +129,7 @@ const musicas = {
 
 const container = document.getElementById("buttons");
 
-// FUNÇÃO PARA CRIAR BOTÕES COM BUSCA
+// CRIAR BOTÕES COM FILTRO
 function criarBotoes(filter="") {
   container.innerHTML="";
   Object.keys(musicas).forEach(categoria=>{
@@ -153,28 +156,24 @@ function criarBotoes(filter="") {
   });
 }
 
-// FUNÇÃO DE VOTO COM CONTAGEM SOBRE O BOTÃO
+// VOTO COM MENSAGEM "Próximo voto em X segundos"
 function voteMusica(musica, button) {
-  const countdownSpan = document.createElement("span");
-  countdownSpan.className="countdown";
-  button.appendChild(countdownSpan);
-  button.disabled=true;
+  button.disabled = true;
+  const originalText = button.innerText;
+  let tempo = 5;
 
-  let tempo=5;
-  countdownSpan.innerText=tempo;
+  database.ref("ranking/" + musica).transaction(v => (v || 0) + 1);
 
-  database.ref("ranking/"+musica).transaction(v=>(v||0)+1);
-
-  const interval = setInterval(()=>{
-    tempo--;
-    if(tempo>0){
-      countdownSpan.innerText=tempo;
+  const interval = setInterval(() => {
+    if(tempo > 0){
+      button.innerText = `Próximo voto em ${tempo}s`;
+      tempo--;
     } else {
       clearInterval(interval);
-      button.disabled=false;
-      button.removeChild(countdownSpan);
+      button.innerText = originalText;
+      button.disabled = false;
     }
-  },1000);
+  }, 1000);
 }
 
 // BUSCA
