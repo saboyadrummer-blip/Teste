@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totem de Votação</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  margin-bottom: 30px;
+}
+
+button {
+  display: block;
+  width: 80%;
+  max-width: 350px;
+  margin: 10px auto;
+  padding: 18px;
+  font-size: 20px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #e10600;
+  color: white;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #ff3b30;
+}
+
+h2 {
+  margin-top: 40px;
+}
+
+.rankItem {
+  font-size: 22px;
+  margin: 8px 0;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Escolha a próxima música</h1>
+
+<div id="buttons"></div>
+
+<h2>Ranking ao Vivo</h2>
+<div id="rankingList"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a",
+  storageBucket: "totem-12c8a.appspot.com",
+  messagingSenderId: "308642629645",
+  appId: "1:308642629645:web:dfa6a4ce6dd85de4bced44"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+const musicas = [
+  "Música 1",
+  "Música 2",
+  "Música 3",
+  "Música 4",
+  "Música 5",
+  "Música 6"
+];
+
+const container = document.getElementById("buttons");
+
+musicas.forEach(musica => {
+  const btn = document.createElement("button");
+  btn.innerText = musica;
+  btn.onclick = function () {
+    const ref = database.ref("ranking/" + musica);
+    ref.transaction(function(current) {
+      return (current || 0) + 1;
+    });
+  };
+  container.appendChild(btn);
+});
+
+database.ref("ranking").on("value", function(snapshot) {
+  const data = snapshot.val() || {};
+  const sorted = Object.entries(data).sort(function(a,b){
+    return b[1] - a[1];
+  });
+
+  let html = "";
+  sorted.forEach(function(item, index){
+    html += "<div class='rankItem'>" + 
+            (index+1) + "º - " + 
+            item[0] + " (" + 
+            item[1] + " votos)</div>";
+  });
+
+  document.getElementById("rankingList").innerHTML = html;
+});
+</script>
+
+</body>
+</html>
