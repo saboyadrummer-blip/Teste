@@ -1,290 +1,178 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Totem de Votação</title>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<title>Playlist</title>
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #141414;
-  color: white;
-  padding: 20px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #141414;
+    color: white;
 }
 
-h1 { text-align:center; margin-bottom:20px; }
+header {
+    padding: 20px;
+    background: #000;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+h1 {
+    margin: 0 0 10px 0;
+}
 
 input {
-  display:block;
-  margin:0 auto 30px auto;
-  width:90%;
-  max-width:500px;
-  padding:12px;
-  font-size:18px;
-  border-radius:6px;
-  border:none;
+    padding: 10px;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 4px;
+    border: none;
+    font-size: 16px;
 }
 
-.category { margin-bottom:40px; }
+.section {
+    padding: 20px;
+}
 
-.category h2 {
-  margin-left:10px;
-  margin-bottom:15px;
-  color:#e50914;
+.section h2 {
+    margin-bottom: 10px;
 }
 
 .grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
-  gap:15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
 }
 
 .card {
-  background:#222;
-  padding:20px;
-  border-radius:8px;
-  cursor:pointer;
-  transition:0.3s;
-  text-align:center;
-  font-size:14px;
+    background: #1f1f1f;
+    padding: 15px;
+    border-radius: 6px;
+    transition: transform 0.2s, background 0.2s;
+    cursor: pointer;
 }
 
 .card:hover {
-  transform:scale(1.05);
-  background:#e50914;
+    transform: scale(1.05);
+    background: #e50914;
 }
 
-#rankingList { margin-top:40px; text-align:center; }
+.top3 .card {
+    border: 2px solid gold;
+}
 
-.rankItem { font-size:20px; margin:5px 0; }
-
-.top1 { color:gold; font-weight:bold; }
-.top2 { color:silver; font-weight:bold; }
-.top3 { color:#cd7f32; font-weight:bold; }
-
-#message { text-align:center; margin-top:20px; color:#00ff88; }
-#countdown { text-align:center; margin-top:10px; color:#ffdd00; }
+.artist {
+    font-size: 14px;
+    opacity: 0.7;
+}
 </style>
 </head>
 
 <body>
 
-<h1>Escolha a próxima música</h1>
-<input type="text" id="search" placeholder="🔎 Buscar música...">
+<header>
+    <h1>Minha Playlist</h1>
+    <input type="text" id="search" placeholder="Buscar música ou artista...">
+</header>
+
 <div id="content"></div>
 
-<div id="message"></div>
-<div id="countdown"></div>
-
-<h2 style="text-align:center;margin-top:40px;">Ranking ao Vivo</h2>
-<div id="rankingList"></div>
-
 <script>
-const firebaseConfig = {
-  apiKey: "SUA_KEY",
-  authDomain: "SUA_DOMAIN",
-  databaseURL: "SUA_URL",
-  projectId: "SUA_ID"
-};
+const songs = [
 
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+{artist:"Angra", title:"Carry On", category:"Metal"},
+{artist:"Angra", title:"Nova Era", category:"Metal"},
+{artist:"Angra", title:"Rebirth", category:"Metal"},
+{artist:"Shaman", title:"Fairy Tale", category:"Metal"},
+{artist:"Shaman", title:"Eagle Fly Free", category:"Metal"},
+{artist:"Andre Matos", title:"Time To Be Free", category:"Metal"},
 
-const musicas = {
+{artist:"Guns N' Roses", title:"Sweet Child O' Mine", category:"Rock"},
+{artist:"Guns N' Roses", title:"November Rain", category:"Rock"},
+{artist:"Metallica", title:"Nothing Else Matters", category:"Rock"},
+{artist:"Metallica", title:"Enter Sandman", category:"Rock"},
+{artist:"Iron Maiden", title:"Fear Of The Dark", category:"Rock"},
+{artist:"Queen", title:"Bohemian Rhapsody", category:"Rock"},
 
-"Rock Internacional": [
-"Nirvana – Smells Like Teen Spirit",
-"Nirvana – Come As You Are",
-"Nirvana – Heart-Shaped Box",
-"Nirvana – About A Girl",
-"Pearl Jam – Soldier of Love",
-"Pearl Jam – Last Kiss",
-"Pearl Jam – Black",
-"U2 – With Or Without You",
-"U2 – Helter Skelter",
-"Pink Floyd – Wish You Were Here",
-"Lynyrd Skynyrd – Sweet Home Alabama",
-"Lynyrd Skynyrd – Simple Man",
-"Foo Fighters – Everlong",
-"Radiohead – Creep",
-"The Police – Roxanne",
-"The Police – Every Breath You Take",
-"The Rolling Stones – Anybody Seen My Baby?",
-"Cream – White Room",
-"Cream – Sunshine Of Your Love",
-"INXS – Never Tear Us Apart",
-"INXS – Need You Tonight",
-"Led Zeppelin – Immigrant Song",
-"Led Zeppelin – Rock And Roll",
-"Queens of the Stone Age – No One Knows",
-"Queens of the Stone Age – Make It Wit Chu",
-"Queen – Another One Bites The Dust",
-"The Doors – Roadhouse Blues",
-"The Doors – Love Me Two Times",
-"The Doors – Riders On The Storm",
-"The White Stripes – Seven Nation Army",
-"Alice In Chains – Man In The Box",
-"Alice In Chains – Would?",
-"Alice In Chains – Down In A Hole",
-"Black Sabbath – Paranoid",
-"Stone Temple Pilots – Plush",
-"Stone Temple Pilots – Interstate Love Song",
-"Stone Temple Pilots – Creep",
-"Tom Petty – Runnin' Down A Dream",
-"Foghat – Slow Ride",
-"Survivor – Eye Of The Tiger",
-"Foreigner – I Want To Know What Love Is",
-"The Outfield – Your Love",
-"Blur – Coffee & TV",
-"Spin Doctors – Two Princes",
-"Lenny Kravitz – It Ain't Over 'Til It's Over",
-"Lenny Kravitz – Fly Away",
-"Oasis – Wonderwall",
-"Kings of Leon – Closer",
-"Green Day – American Idiot",
-"The Smashing Pumpkins – 1979"
-],
+{artist:"Bruno Mars", title:"Uptown Funk", category:"Pop"},
+{artist:"Michael Jackson", title:"Billie Jean", category:"Pop"},
+{artist:"The Weeknd", title:"Blinding Lights", category:"Pop"},
+{artist:"Dua Lipa", title:"Levitating", category:"Pop"},
+{artist:"Lady Gaga", title:"Poker Face", category:"Pop"},
+{artist:"Ed Sheeran", title:"Shape Of You", category:"Pop"}
 
-"Rock Nacional": [
-"Os Paralamas do Sucesso – Meu Erro",
-"Skank – Garota Nacional",
-"Skank – Sutilmente",
-"Lobão – Me Chama",
-"Lobão – Blá, Blá, Blá... Eu Te Amo",
-"Lobão – Rádio Blá",
-"Barão Vermelho – Bete Balanço",
-"Frejat – Segredos",
-"Legião Urbana – Pais E Filhos",
-"Cazuza – Exagerado",
-"Titãs – Pra Dizer Adeus"
-],
+];
 
-"Clássicos & Soul": [
-"The Beatles – Come Together",
-"The Beatles – Hey Jude",
-"The Beatles – Let It Be",
-"Ben E. King – Stand By Me",
-"Elvis Presley – Suspicious Minds",
-"Eric Clapton – Cocaine",
-"Commodores – Easy",
-"Creedence Clearwater Revival – Proud Mary",
-"Creedence Clearwater Revival – Have You Ever Seen The Rain",
-"Creedence Clearwater Revival – Suzie Q",
-"Creedence Clearwater Revival – Born On The Bayou",
-"Creedence Clearwater Revival – Bad Moon Rising",
-"Creedence Clearwater Revival – Fortunate Son"
-],
+const top3 = [
+"Carry On",
+"Sweet Child O' Mine",
+"Billie Jean"
+];
 
-"Pop & Outros": [
-"Tim Maia – Gostava Tanto de Você",
-"Tim Maia – Primavera (Vai Chuva)",
-"Djavan – Lilás",
-"Maroon 5 – Sugar",
-"Natalie Imbruglia – Torn",
-"Jimmy Cliff – I Can See Clearly Now",
-"Mike + The Mechanics – Over My Shoulder",
-"Sugar Ray – Every Morning",
-"Phil Collins – I Don't Care Anymore",
-"Modjo – Lady"
-]
+function render(filter="") {
+    const content = document.getElementById("content");
+    content.innerHTML = "";
 
-};
-
-const content = document.getElementById("content");
-const searchInput = document.getElementById("search");
-const message = document.getElementById("message");
-const countdownDiv = document.getElementById("countdown");
-
-let bloqueado = false;
-
-function gerarGrid(filtro="") {
-  content.innerHTML = "";
-
-  Object.keys(musicas).forEach(categoria => {
-    const filtradas = musicas[categoria].filter(m =>
-      m.toLowerCase().includes(filtro.toLowerCase())
+    const filtered = songs.filter(song =>
+        song.title.toLowerCase().includes(filter.toLowerCase()) ||
+        song.artist.toLowerCase().includes(filter.toLowerCase())
     );
 
-    if(filtradas.length > 0) {
+    const categories = [...new Set(filtered.map(song => song.category))];
 
-      const divCat = document.createElement("div");
-      divCat.className = "category";
+    // Top 3
+    const topSection = document.createElement("div");
+    topSection.className = "section top3";
+    topSection.innerHTML = "<h2>🔥 Top 3</h2>";
+    const topGrid = document.createElement("div");
+    topGrid.className = "grid";
 
-      const titulo = document.createElement("h2");
-      titulo.innerText = categoria;
-      divCat.appendChild(titulo);
+    filtered.filter(song => top3.includes(song.title))
+        .forEach(song => {
+            topGrid.appendChild(createCard(song));
+        });
 
-      const grid = document.createElement("div");
-      grid.className = "grid";
+    topSection.appendChild(topGrid);
+    content.appendChild(topSection);
 
-      filtradas.forEach(musica => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerText = musica;
+    // Categories
+    categories.forEach(cat => {
+        const section = document.createElement("div");
+        section.className = "section";
+        section.innerHTML = `<h2>${cat}</h2>`;
 
-        card.onclick = function() {
-          if(bloqueado) return;
-          bloqueado = true;
+        const grid = document.createElement("div");
+        grid.className = "grid";
 
-          database.ref("ranking/" + musica)
-            .transaction(current => (current || 0) + 1);
+        filtered.filter(song => song.category === cat)
+            .forEach(song => {
+                grid.appendChild(createCard(song));
+            });
 
-          message.innerText = "✅ Voto computado!";
-
-          let tempo = 5;
-          countdownDiv.innerText = `⏳ Próximo voto em: ${tempo}s`;
-
-          const interval = setInterval(() => {
-            tempo--;
-            if(tempo > 0){
-              countdownDiv.innerText = `⏳ Próximo voto em: ${tempo}s`;
-            } else {
-              clearInterval(interval);
-              bloqueado = false;
-              countdownDiv.innerText = "";
-              message.innerText = "";
-            }
-          }, 1000);
-        };
-
-        grid.appendChild(card);
-      });
-
-      divCat.appendChild(grid);
-      content.appendChild(divCat);
-    }
-  });
+        section.appendChild(grid);
+        content.appendChild(section);
+    });
 }
 
-gerarGrid();
+function createCard(song) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+        <div><strong>${song.title}</strong></div>
+        <div class="artist">${song.artist}</div>
+    `;
+    return card;
+}
 
-searchInput.addEventListener("input", e => {
-  gerarGrid(e.target.value);
+document.getElementById("search").addEventListener("input", e => {
+    render(e.target.value);
 });
 
-database.ref("ranking").on("value", snapshot => {
-  const data = snapshot.val() || {};
-  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
-
-  let html = "";
-  sorted.forEach((item,index)=>{
-    let medal="",classe="";
-    if(index===0){ medal="🥇 "; classe="top1"; }
-    if(index===1){ medal="🥈 "; classe="top2"; }
-    if(index===2){ medal="🥉 "; classe="top3"; }
-
-    html += `<div class="rankItem ${classe}">
-    ${medal}${index+1}º - ${item[0]} (${item[1]} votos)
-    </div>`;
-  });
-
-  document.getElementById("rankingList").innerHTML = html;
-});
+render();
 </script>
 
 </body>
