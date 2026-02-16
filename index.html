@@ -18,10 +18,7 @@ body {
   padding: 20px;
 }
 
-h1 {
-  margin-bottom: 30px;
-}
-
+h1 { margin-bottom: 30px; }
 button {
   display: block;
   width: 80%;
@@ -36,45 +33,25 @@ button {
   color: white;
   transition: 0.2s;
 }
-
-button:hover {
-  background: #ff3b30;
-}
-
-button:disabled {
-  background: gray;
-  cursor: not-allowed;
-}
-
-h2 {
-  margin-top: 40px;
-}
-
-.rankItem {
-  font-size: 22px;
-  margin: 8px 0;
-}
-
-#message {
-  font-size: 22px;
-  margin-top: 20px;
-  color: #00ff88;
-}
+button:hover { background: #ff3b30; }
+button:disabled { background: gray; cursor: not-allowed; }
+h2 { margin-top: 40px; }
+.rankItem { font-size: 22px; margin: 8px 0; }
+#message { font-size: 22px; margin-top: 20px; color: #00ff88; }
 </style>
 </head>
 
 <body>
 
 <h1>Escolha a próxima música</h1>
-
 <div id="buttons"></div>
-
 <div id="message"></div>
 
 <h2>Ranking ao Vivo</h2>
 <div id="rankingList"></div>
 
 <script>
+// CONFIGURAÇÃO DO FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
   authDomain: "totem-12c8a.firebaseapp.com",
@@ -84,74 +61,59 @@ const firebaseConfig = {
   messagingSenderId: "308642629645",
   appId: "1:308642629645:web:dfa6a4ce6dd85de4bced44"
 };
-
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-const musicas = [
-  "Música 1",
-  "Música 2",
-  "Música 3",
-  "Música 4",
-  "Música 5",
-  "Música 6"
-];
-
+// LISTA DE MÚSICAS
+const musicas = ["Música 1","Música 2","Música 3","Música 4","Música 5","Música 6"];
 const container = document.getElementById("buttons");
 const message = document.getElementById("message");
-
 let bloqueado = false;
 
-musicas.forEach(musica => {
+// RESET SECRETO VIA URL
+if(location.search.includes("reset=12345")){
+  database.ref("ranking").set({});
+  database.ref("votes").set({});
+  alert("✅ Ranking zerado com sucesso!");
+}
 
+// CRIA BOTÕES DE MÚSICA
+musicas.forEach(musica => {
   const btn = document.createElement("button");
   btn.innerText = musica;
 
-  btn.onclick = function () {
-
+  btn.onclick = function() {
     if (bloqueado) return;
 
     bloqueado = true;
 
     const rankingRef = database.ref("ranking/" + musica);
-
-    rankingRef.transaction(function(current) {
+    rankingRef.transaction(function(current){
       return (current || 0) + 1;
     });
 
     message.innerText = "✅ Voto computado! Próxima pessoa...";
-
     document.querySelectorAll("button").forEach(b => b.disabled = true);
 
-    setTimeout(function() {
+    setTimeout(function(){
       bloqueado = false;
       message.innerText = "";
       document.querySelectorAll("button").forEach(b => b.disabled = false);
-    }, 5000); // 5 segundos
-
+    }, 5000);
   };
 
   container.appendChild(btn);
 });
 
-database.ref("ranking").on("value", function(snapshot) {
-
+// RANKING AO VIVO
+database.ref("ranking").on("value", function(snapshot){
   const data = snapshot.val() || {};
-  const sorted = Object.entries(data).sort(function(a,b){
-    return b[1] - a[1];
-  });
-
+  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
   let html = "";
-
-  sorted.forEach(function(item, index){
-    html += "<div class='rankItem'>" + 
-            (index+1) + "º - " + 
-            item[0] + " (" + 
-            item[1] + " votos)</div>";
+  sorted.forEach((item,index)=>{
+    html += "<div class='rankItem'>"+(index+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
   });
-
   document.getElementById("rankingList").innerHTML = html;
-
 });
 </script>
 
