@@ -41,6 +41,11 @@ button:hover {
   background: #ff3b30;
 }
 
+button:disabled {
+  background: gray;
+  cursor: not-allowed;
+}
+
 h2 {
   margin-top: 40px;
 }
@@ -75,6 +80,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// Lista de músicas
 const musicas = [
   "Música 1",
   "Música 2",
@@ -84,27 +90,63 @@ const musicas = [
   "Música 6"
 ];
 
+// Criar ID único do dispositivo
+let deviceId = localStorage.getItem("deviceId");
+
+if (!deviceId) {
+  deviceId = Date.now() + "-" + Math.random();
+  localStorage.setItem("deviceId", deviceId);
+}
+
 const container = document.getElementById("buttons");
 
+// Criar botões
 musicas.forEach(musica => {
+
   const btn = document.createElement("button");
   btn.innerText = musica;
+
   btn.onclick = function () {
-    const ref = database.ref("ranking/" + musica);
-    ref.transaction(function(current) {
-      return (current || 0) + 1;
+
+    btn.disabled = true;
+
+    const voteRef = database.ref("votes/" + musica + "/" + deviceId);
+
+    voteRef.once("value").then(function(snapshot) {
+
+      if (snapshot.exists()) {
+        alert("Você já votou nessa música.");
+        btn.disabled = false;
+        return;
+      }
+
+      voteRef.set(true);
+
+      const rankingRef = database.ref("ranking/" + musica);
+
+      rankingRef.transaction(function(current) {
+        return (current || 0) + 1;
+      });
+
+      alert("Voto computado!");
+
     });
+
   };
+
   container.appendChild(btn);
 });
 
+// Atualização ao vivo do ranking
 database.ref("ranking").on("value", function(snapshot) {
+
   const data = snapshot.val() || {};
   const sorted = Object.entries(data).sort(function(a,b){
     return b[1] - a[1];
   });
 
   let html = "";
+
   sorted.forEach(function(item, index){
     html += "<div class='rankItem'>" + 
             (index+1) + "º - " + 
@@ -113,6 +155,7 @@ database.ref("ranking").on("value", function(snapshot) {
   });
 
   document.getElementById("rankingList").innerHTML = html;
+
 });
 </script>
 
