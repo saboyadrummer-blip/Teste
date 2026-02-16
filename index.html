@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escolha a próxima música</title>
+<title>Vote na próxima música</title>
 
 <style>
 body{
@@ -34,6 +34,13 @@ h1{
   font-size:16px;
 }
 
+#timer{
+  font-size:20px;
+  margin-top:10px;
+  color:#00ff88;
+  font-weight:bold;
+}
+
 .categoria{
   padding:20px;
 }
@@ -55,7 +62,6 @@ h1{
   padding:15px;
   border-radius:10px;
   transition:0.3s;
-  position:relative;
 }
 
 .card:hover{
@@ -75,15 +81,16 @@ h1{
   cursor:pointer;
 }
 
+.card button:disabled{
+  background:gray;
+  cursor:not-allowed;
+}
+
 .votos{
   font-size:14px;
   margin-top:5px;
   opacity:0.8;
 }
-
-.top1{ border:3px solid gold; }
-.top2{ border:3px solid silver; }
-.top3{ border:3px solid #cd7f32; }
 
 .ranking{
   padding:20px;
@@ -106,6 +113,7 @@ h1{
 <header>
   <h1>Ranking Oficial</h1>
   <input type="text" id="search" placeholder="Buscar música...">
+  <div id="timer"></div>
 </header>
 
 <div id="conteudo"></div>
@@ -226,6 +234,9 @@ const categorias = {
 };
 
 let votos = JSON.parse(localStorage.getItem("votos")) || {};
+let bloqueado = false;
+let tempoRestante = 0;
+let intervalo = null;
 
 if(window.location.search.includes("reset=12345")){
   localStorage.removeItem("votos");
@@ -233,9 +244,41 @@ if(window.location.search.includes("reset=12345")){
 }
 
 function votar(nome){
+
+  if(bloqueado) return;
+
+  bloqueado = true;
+  tempoRestante = 5;
+
   votos[nome] = (votos[nome] || 0) + 1;
   localStorage.setItem("votos", JSON.stringify(votos));
-  render();
+
+  atualizarRanking();
+  iniciarTimer();
+}
+
+function iniciarTimer(){
+
+  const timerEl = document.getElementById("timer");
+  const botoes = document.querySelectorAll(".card button");
+
+  botoes.forEach(btn => btn.disabled = true);
+
+  timerEl.textContent = `⏳ Próximo voto em ${tempoRestante}s`;
+
+  intervalo = setInterval(() => {
+
+    tempoRestante--;
+    timerEl.textContent = `⏳ Próximo voto em ${tempoRestante}s`;
+
+    if(tempoRestante <= 0){
+      clearInterval(intervalo);
+      timerEl.textContent = "";
+      bloqueado = false;
+      botoes.forEach(btn => btn.disabled = false);
+    }
+
+  },1000);
 }
 
 function render(){
@@ -243,8 +286,6 @@ function render(){
 const busca = document.getElementById("search").value.toLowerCase();
 const conteudo = document.getElementById("conteudo");
 conteudo.innerHTML = "";
-
-let todas = [];
 
 for(const categoria in categorias){
 
@@ -262,16 +303,23 @@ categorias[categoria].forEach(musica => {
 
 if(!musica.toLowerCase().includes(busca)) return;
 
-todas.push(musica);
-
 const card = document.createElement("div");
 card.className = "card";
 
-card.innerHTML = `
-<strong>${musica}</strong>
-<div class="votos">Votos: ${votos[musica] || 0}</div>
-<button onclick="votar('${musica}')">Votar</button>
-`;
+const tituloMusica = document.createElement("strong");
+tituloMusica.textContent = musica;
+
+const votosEl = document.createElement("div");
+votosEl.className = "votos";
+votosEl.textContent = `Votos: ${votos[musica] || 0}`;
+
+const botao = document.createElement("button");
+botao.textContent = "Votar";
+botao.onclick = () => votar(musica);
+
+card.appendChild(tituloMusica);
+card.appendChild(votosEl);
+card.appendChild(botao);
 
 grid.appendChild(card);
 
