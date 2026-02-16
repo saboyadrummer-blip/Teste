@@ -113,4 +113,25 @@ musicas.forEach(musica => {
         bloqueado = false;
         countdownDiv.innerText = "";
         message.innerText = "";
-        document.querySelectorAll("button").forEach(b =>
+        document.querySelectorAll("button").forEach(b => b.disabled = false);
+      }
+    }, 1000);
+  };
+
+  container.appendChild(btn);
+});
+
+// RANKING AO VIVO
+database.ref("ranking").on("value", function(snapshot){
+  const data = snapshot.val() || {};
+  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  let html = "";
+  sorted.forEach((item,index)=>{
+    html += "<div class='rankItem'>"+(index+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+  });
+  document.getElementById("rankingList").innerHTML = html;
+});
+</script>
+
+</body>
+</html>
