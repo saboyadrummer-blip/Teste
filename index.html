@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vote na Próxima Música</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
 <style>
 body {
   margin: 0;
@@ -42,10 +39,10 @@ button {
 }
 
 button:hover { background: #ff3b30; }
-button:disabled { background: gray; cursor: not-allowed; }
+button:disabled { background: gray; }
 
 #message {
-  font-size: 22px;
+  font-size: 20px;
   margin-top: 20px;
   color: #00ff88;
   font-weight: bold;
@@ -65,15 +62,6 @@ button:disabled { background: gray; cursor: not-allowed; }
 <div id="rankingList"></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "SUA_KEY",
-  authDomain: "SEU_AUTH",
-  databaseURL: "SEU_DATABASE_URL",
-  projectId: "SEU_PROJECT_ID"
-};
-
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
 
 const categorias = {
 
@@ -186,12 +174,18 @@ const categorias = {
 };
 
 const container = document.getElementById("buttons");
+const rankingDiv = document.getElementById("rankingList");
 const message = document.getElementById("message");
+
+let votos = {};
 let bloqueado = false;
 
-if(location.search.includes("reset=12345")){
-  database.ref("ranking").set({});
-  alert("Ranking zerado!");
+function atualizarRanking() {
+  const ordenado = Object.entries(votos).sort((a,b)=>b[1]-a[1]);
+  rankingDiv.innerHTML = "";
+  ordenado.forEach((item,index)=>{
+    rankingDiv.innerHTML += `<div class="rankItem">${index+1}º - ${item[0]} (${item[1]} votos)</div>`;
+  });
 }
 
 Object.keys(categorias).forEach(categoria => {
@@ -207,44 +201,34 @@ Object.keys(categorias).forEach(categoria => {
     btn.innerText = musica;
 
     btn.onclick = function() {
-      if (bloqueado) return;
-      bloqueado = true;
+      if(bloqueado) return;
 
-      const ref = database.ref("ranking/" + musica);
-      ref.transaction(current => (current || 0) + 1);
+      bloqueado = true;
+      votos[musica] = (votos[musica] || 0) + 1;
+      atualizarRanking();
 
       let tempo = 5;
       message.innerText = "✅ Voto computado! Próximo voto em " + tempo + "s";
       document.querySelectorAll("button").forEach(b => b.disabled = true);
 
-      const contador = setInterval(() => {
+      const contador = setInterval(()=>{
         tempo--;
         message.innerText = "⏳ Próximo voto em " + tempo + "s";
 
-        if (tempo <= 0) {
+        if(tempo <= 0){
           clearInterval(contador);
           bloqueado = false;
           message.innerText = "";
           document.querySelectorAll("button").forEach(b => b.disabled = false);
         }
-      }, 1000);
+      },1000);
     };
 
     container.appendChild(btn);
   });
+
 });
 
-database.ref("ranking").on("value", snapshot => {
-  const data = snapshot.val() || {};
-  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
-
-  let html = "";
-  sorted.forEach((item,index)=>{
-    html += "<div class='rankItem'>"+(index+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
-  });
-
-  document.getElementById("rankingList").innerHTML = html;
-});
 </script>
 
 </body>
