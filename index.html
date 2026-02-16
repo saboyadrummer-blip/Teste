@@ -1,0 +1,60 @@
+
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a",
+  storageBucket: "totem-12c8a.appspot.com",
+  messagingSenderId: "308642629645",
+  appId: "1:308642629645:web:dfa6a4ce6dd85de4bced44"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+const musicas = [
+  "Música 1",
+  "Música 2",
+  "Música 3",
+  "Música 4",
+  "Música 5",
+  "Música 6"
+];
+
+const container = document.getElementById("buttons");
+
+musicas.forEach(musica => {
+  const btn = document.createElement("button");
+  btn.innerText = musica;
+  btn.onclick = () => votar(musica);
+  container.appendChild(btn);
+});
+
+function votar(musica){
+  const ref = database.ref("ranking/" + musica);
+  ref.transaction(current => (current || 0) + 1);
+}
+
+database.ref("ranking").on("value", snapshot => {
+  const data = snapshot.val() || {};
+  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+
+  let html = "";
+  sorted.forEach((item,index)=>{
+    html += `<div class="rankItem">${index+1}º - ${item[0]} (${item[1]} votos)</div>`;
+  });
+
+  document.getElementById("rankingList").innerHTML = html;
+});
+</script>
+
+</body>
+</html>  display:none;
+  padding:20px;
+}
+
+.big{
+  font-size:26px;
+  margin:20px 0;
