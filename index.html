@@ -1,40 +1,161 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Totem de Votação</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totem Profissional</title>
 
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #111;
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:black;
+  color:white;
+  text-align:center;
+}
 
-    h1 {
-      margin-top: 20px;
-    }
+button{
+  padding:20px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  background:#e10600;
+  color:white;
+  margin:10px;
+  width:80%;
+  max-width:300px;
+}
 
-    .buttons {
-      margin-top: 30px;
-    }
+button:active{
+  background:#ff3b30;
+}
 
-    button {
-      padding: 15px 25px;
-      margin: 10px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.2s;
+#confirmScreen, #rankingScreen{
+  display:none;
+  padding:20px;
+}
+
+.big{
+  font-size:26px;
+  margin:20px 0;
+}
+
+.rankItem{
+  font-size:22px;
+  margin:10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div id="voteScreen">
+  <h1>Escolha a próxima música</h1>
+  <div id="musicButtons"></div>
+  <button onclick="showRanking()">Ver Ranking ao Vivo</button>
+</div>
+
+<div id="confirmScreen">
+  <div class="big">Confirmar voto?</div>
+  <div id="selectedMusic" class="big"></div>
+  <button onclick="confirmVote()">Confirmar</button>
+  <button onclick="cancelVote()">Cancelar</button>
+</div>
+
+<div id="rankingScreen">
+  <h2>Ranking de votos</h2>
+  <div id="rankingList"></div>
+  <button onclick="backToVote()">Voltar</button>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a",
+  storageBucket: "totem-12c8a.appspot.com",
+  messagingSenderId: "308642629645",
+  appId: "1:308642629645:web:dfa6a4ce6dd85de4bced44"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+const musicas = [
+  "Música 1",
+  "Música 2",
+  "Música 3",
+  "Música 4",
+  "Música 5",
+  "Música 6"
+];
+
+let musicaSelecionada = null;
+
+// Criar botões dinamicamente
+const container = document.getElementById("musicButtons");
+musicas.forEach(musica => {
+  const btn = document.createElement("button");
+  btn.innerText = musica;
+  btn.onclick = () => selectMusic(musica);
+  container.appendChild(btn);
+});
+
+function selectMusic(musica){
+  musicaSelecionada = musica;
+  document.getElementById("selectedMusic").innerText = musica;
+  document.getElementById("voteScreen").style.display = "none";
+  document.getElementById("confirmScreen").style.display = "block";
+}
+
+function cancelVote(){
+  musicaSelecionada = null;
+  document.getElementById("confirmScreen").style.display = "none";
+  document.getElementById("voteScreen").style.display = "block";
+}
+
+function confirmVote(){
+  if(!musicaSelecionada) return;
+
+  const ref = database.ref("ranking/" + musicaSelecionada);
+  ref.transaction(current => (current || 0) + 1);
+
+  musicaSelecionada = null;
+
+  document.getElementById("confirmScreen").style.display = "none";
+  document.getElementById("voteScreen").style.display = "block";
+}
+
+function showRanking(){
+  document.getElementById("voteScreen").style.display = "none";
+  document.getElementById("rankingScreen").style.display = "block";
+}
+
+function backToVote(){
+  document.getElementById("rankingScreen").style.display = "none";
+  document.getElementById("voteScreen").style.display = "block";
+}
+
+// Ranking em tempo real
+database.ref("ranking").on("value", snapshot => {
+  const data = snapshot.val() || {};
+  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+
+  let html = "";
+  sorted.forEach((item,index)=>{
+    html += `<div class="rankItem">${index+1}º - ${item[0]} (${item[1]} votos)</div>`;
+  });
+
+  document.getElementById("rankingList").innerHTML = html;
+});
+</script>
+
+</body>
+</html>      transition: 0.2s;
     }
 
     button:hover {
@@ -251,4 +372,5 @@ function voltarParaGrid(){
 </body>
 
 </html>
+
 
