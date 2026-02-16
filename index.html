@@ -1,178 +1,317 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playlist</title>
+<title>Ranking Oficial</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #141414;
-    color: white;
+body{
+  margin:0;
+  background:#141414;
+  font-family:Arial, Helvetica, sans-serif;
+  color:white;
 }
 
-header {
-    padding: 20px;
-    background: #000;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+header{
+  padding:20px;
+  background:#000;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
-h1 {
-    margin: 0 0 10px 0;
+h1{
+  margin:0 0 10px 0;
 }
 
-input {
-    padding: 10px;
-    width: 100%;
-    max-width: 400px;
-    border-radius: 4px;
-    border: none;
-    font-size: 16px;
+#search{
+  padding:10px;
+  width:100%;
+  max-width:400px;
+  border:none;
+  border-radius:6px;
+  font-size:16px;
 }
 
-.section {
-    padding: 20px;
+.categoria{
+  padding:20px;
 }
 
-.section h2 {
-    margin-bottom: 10px;
+.categoria h2{
+  margin-bottom:15px;
+  border-left:5px solid red;
+  padding-left:10px;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:15px;
 }
 
-.card {
-    background: #1f1f1f;
-    padding: 15px;
-    border-radius: 6px;
-    transition: transform 0.2s, background 0.2s;
-    cursor: pointer;
+.card{
+  background:#1f1f1f;
+  padding:15px;
+  border-radius:10px;
+  transition:0.3s;
+  position:relative;
 }
 
-.card:hover {
-    transform: scale(1.05);
-    background: #e50914;
+.card:hover{
+  transform:scale(1.05);
+  background:#292929;
 }
 
-.top3 .card {
-    border: 2px solid gold;
+.card button{
+  margin-top:10px;
+  padding:8px;
+  width:100%;
+  border:none;
+  border-radius:6px;
+  background:red;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-.artist {
-    font-size: 14px;
-    opacity: 0.7;
+.votos{
+  font-size:14px;
+  margin-top:5px;
+  opacity:0.8;
 }
+
+.top1{ border:3px solid gold; }
+.top2{ border:3px solid silver; }
+.top3{ border:3px solid #cd7f32; }
+
+.ranking{
+  padding:20px;
+  background:#111;
+}
+
+.ranking h2{
+  margin-top:0;
+}
+
+.ranking-item{
+  margin:5px 0;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-    <h1>Minha Playlist</h1>
-    <input type="text" id="search" placeholder="Buscar música ou artista...">
+  <h1>Ranking Oficial</h1>
+  <input type="text" id="search" placeholder="Buscar música...">
 </header>
 
-<div id="content"></div>
+<div id="conteudo"></div>
+
+<div class="ranking">
+  <h2>Ranking Ao Vivo</h2>
+  <div id="rankingLista"></div>
+</div>
 
 <script>
-const songs = [
 
-{artist:"Angra", title:"Carry On", category:"Metal"},
-{artist:"Angra", title:"Nova Era", category:"Metal"},
-{artist:"Angra", title:"Rebirth", category:"Metal"},
-{artist:"Shaman", title:"Fairy Tale", category:"Metal"},
-{artist:"Shaman", title:"Eagle Fly Free", category:"Metal"},
-{artist:"Andre Matos", title:"Time To Be Free", category:"Metal"},
+const categorias = {
 
-{artist:"Guns N' Roses", title:"Sweet Child O' Mine", category:"Rock"},
-{artist:"Guns N' Roses", title:"November Rain", category:"Rock"},
-{artist:"Metallica", title:"Nothing Else Matters", category:"Rock"},
-{artist:"Metallica", title:"Enter Sandman", category:"Rock"},
-{artist:"Iron Maiden", title:"Fear Of The Dark", category:"Rock"},
-{artist:"Queen", title:"Bohemian Rhapsody", category:"Rock"},
+"Rock Brasil": [
+"Os Paralamas do Sucesso – Meu Erro",
+"Skank – Garota Nacional",
+"Skank – Sutilmente",
+"Lobão – Me Chama",
+"Barão Vermelho – Bete Balanço",
+"Frejat – Segredos",
+"Legião Urbana – Pais E Filhos",
+"Cazuza – Exagerado",
+"Titãs – Pra Dizer Adeus",
+"Lobão – Blá, Blá, Blá... Eu Te Amo",
+"Lobão – Rádio Blá",
+"Djavan – Lilás"
+],
 
-{artist:"Bruno Mars", title:"Uptown Funk", category:"Pop"},
-{artist:"Michael Jackson", title:"Billie Jean", category:"Pop"},
-{artist:"The Weeknd", title:"Blinding Lights", category:"Pop"},
-{artist:"Dua Lipa", title:"Levitating", category:"Pop"},
-{artist:"Lady Gaga", title:"Poker Face", category:"Pop"},
-{artist:"Ed Sheeran", title:"Shape Of You", category:"Pop"}
+"Grunge / Seattle": [
+"Nirvana – Smells Like Teen Spirit",
+"Nirvana – Come As You Are",
+"Nirvana – Heart-Shaped Box",
+"Nirvana – About A Girl",
+"Nirvana – Drain You",
+"Pearl Jam – Soldier of Love",
+"Pearl Jam – Last Kiss",
+"Pearl Jam – Black",
+"Alice In Chains – Man In The Box",
+"Alice In Chains – Would?",
+"Alice In Chains – Down In A Hole",
+"Stone Temple Pilots – Plush",
+"Stone Temple Pilots – Interstate Love Song",
+"Stone Temple Pilots – Creep",
+"The Smashing Pumpkins – 1979"
+],
 
-];
+"Classic Rock": [
+"Elvis Presley – Suspicious Minds",
+"The Beatles – Come Together",
+"The Beatles – Hey Jude",
+"The Beatles – Let It Be",
+"Ben E. King – Stand By Me",
+"U2 – With Or Without You",
+"U2 – Helter Skelter",
+"Pink Floyd – Wish You Were Here",
+"Lynyrd Skynyrd – Sweet Home Alabama",
+"Lynyrd Skynyrd – Simple Man",
+"Creedence Clearwater Revival – Proud Mary",
+"Creedence Clearwater Revival – Have You Ever Seen The Rain",
+"Creedence Clearwater Revival – Suzie Q",
+"Creedence Clearwater Revival – Born On The Bayou",
+"Creedence Clearwater Revival – Bad Moon Rising",
+"Creedence Clearwater Revival – Fortunate Son",
+"The Police – Roxanne",
+"The Police – Every Breath You Take",
+"The Rolling Stones – Anybody Seen My Baby?",
+"Cream – White Room",
+"Cream – Sunshine Of Your Love",
+"INXS – Never Tear Us Apart",
+"INXS – Need You Tonight",
+"Led Zeppelin – Immigrant Song",
+"Led Zeppelin – Rock And Roll",
+"Eric Clapton – Cocaine",
+"Chris Isaak – Wicked Game",
+"Queen – Another One Bites The Dust",
+"The Doors – Roadhouse Blues",
+"The Doors – Love Me Two Times",
+"The Doors – Riders On The Storm",
+"Black Sabbath – Paranoid",
+"Billy Idol – White Wedding",
+"Tom Petty – Runnin' Down A Dream",
+"Foghat – Slow Ride",
+"Phil Collins – I Don't Care Anymore",
+"Survivor – Eye Of The Tiger",
+"Foreigner – I Want To Know What Love Is",
+"The Outfield – Your Love",
+"Jimmy Cliff – I Can See Clearly Now",
+"Mike + The Mechanics – Over My Shoulder"
+],
 
-const top3 = [
-"Carry On",
-"Sweet Child O' Mine",
-"Billie Jean"
-];
+"Alternativo / 90s / 2000s": [
+"Foo Fighters – Everlong",
+"Radiohead – Creep",
+"Tears For Fears – Everybody Wants To Rule The World",
+"Daft Punk – Get Lucky",
+"Queens of the Stone Age – No One Knows",
+"Queens of the Stone Age – Make It Wit Chu",
+"The White Stripes – Seven Nation Army",
+"Lenny Kravitz – It Ain't Over 'Til It's Over",
+"Lenny Kravitz – Fly Away",
+"Maroon 5 – Sugar",
+"Oasis – Wonderwall",
+"Kings of Leon – Closer",
+"Natalie Imbruglia – Torn",
+"Green Day – American Idiot",
+"Blur – Coffee & TV",
+"Sugar Ray – Every Morning",
+"Spin Doctors – Two Princes",
+"Modjo – Lady"
+],
 
-function render(filter="") {
-    const content = document.getElementById("content");
-    content.innerHTML = "";
+"Soul / MPB / Outros": [
+"Tim Maia – Gostava Tanto de Você",
+"Tim Maia – Primavera (Vai Chuva)",
+"Commodores – Easy"
+]
 
-    const filtered = songs.filter(song =>
-        song.title.toLowerCase().includes(filter.toLowerCase()) ||
-        song.artist.toLowerCase().includes(filter.toLowerCase())
-    );
+};
 
-    const categories = [...new Set(filtered.map(song => song.category))];
+let votos = JSON.parse(localStorage.getItem("votos")) || {};
 
-    // Top 3
-    const topSection = document.createElement("div");
-    topSection.className = "section top3";
-    topSection.innerHTML = "<h2>🔥 Top 3</h2>";
-    const topGrid = document.createElement("div");
-    topGrid.className = "grid";
-
-    filtered.filter(song => top3.includes(song.title))
-        .forEach(song => {
-            topGrid.appendChild(createCard(song));
-        });
-
-    topSection.appendChild(topGrid);
-    content.appendChild(topSection);
-
-    // Categories
-    categories.forEach(cat => {
-        const section = document.createElement("div");
-        section.className = "section";
-        section.innerHTML = `<h2>${cat}</h2>`;
-
-        const grid = document.createElement("div");
-        grid.className = "grid";
-
-        filtered.filter(song => song.category === cat)
-            .forEach(song => {
-                grid.appendChild(createCard(song));
-            });
-
-        section.appendChild(grid);
-        content.appendChild(section);
-    });
+if(window.location.search.includes("reset=12345")){
+  localStorage.removeItem("votos");
+  votos = {};
 }
 
-function createCard(song) {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-        <div><strong>${song.title}</strong></div>
-        <div class="artist">${song.artist}</div>
-    `;
-    return card;
+function votar(nome){
+  votos[nome] = (votos[nome] || 0) + 1;
+  localStorage.setItem("votos", JSON.stringify(votos));
+  render();
 }
 
-document.getElementById("search").addEventListener("input", e => {
-    render(e.target.value);
+function render(){
+
+const busca = document.getElementById("search").value.toLowerCase();
+const conteudo = document.getElementById("conteudo");
+conteudo.innerHTML = "";
+
+let todas = [];
+
+for(const categoria in categorias){
+
+const section = document.createElement("div");
+section.className = "categoria";
+
+const titulo = document.createElement("h2");
+titulo.textContent = categoria;
+section.appendChild(titulo);
+
+const grid = document.createElement("div");
+grid.className = "grid";
+
+categorias[categoria].forEach(musica => {
+
+if(!musica.toLowerCase().includes(busca)) return;
+
+todas.push(musica);
+
+const card = document.createElement("div");
+card.className = "card";
+
+card.innerHTML = `
+<strong>${musica}</strong>
+<div class="votos">Votos: ${votos[musica] || 0}</div>
+<button onclick="votar('${musica}')">Votar</button>
+`;
+
+grid.appendChild(card);
+
 });
 
+section.appendChild(grid);
+conteudo.appendChild(section);
+}
+
+atualizarRanking();
+}
+
+function atualizarRanking(){
+
+const rankingLista = document.getElementById("rankingLista");
+rankingLista.innerHTML = "";
+
+const ordenado = Object.keys(votos)
+.sort((a,b)=> votos[b]-votos[a]);
+
+ordenado.forEach((musica,i)=>{
+
+const item = document.createElement("div");
+item.className = "ranking-item";
+item.textContent = `${i+1}. ${musica} (${votos[musica]} votos)`;
+
+if(i==0) item.style.color="gold";
+if(i==1) item.style.color="silver";
+if(i==2) item.style.color="#cd7f32";
+
+rankingLista.appendChild(item);
+
+});
+
+}
+
+document.getElementById("search").addEventListener("input", render);
+
 render();
+
 </script>
 
 </body>
