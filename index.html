@@ -54,6 +54,12 @@ h2 {
   font-size: 22px;
   margin: 8px 0;
 }
+
+#message {
+  font-size: 22px;
+  margin-top: 20px;
+  color: #00ff88;
+}
 </style>
 </head>
 
@@ -62,6 +68,8 @@ h2 {
 <h1>Escolha a próxima música</h1>
 
 <div id="buttons"></div>
+
+<div id="message"></div>
 
 <h2>Ranking ao Vivo</h2>
 <div id="rankingList"></div>
@@ -80,7 +88,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Lista de músicas
 const musicas = [
   "Música 1",
   "Música 2",
@@ -90,17 +97,11 @@ const musicas = [
   "Música 6"
 ];
 
-// Criar ID único do dispositivo
-let deviceId = localStorage.getItem("deviceId");
-
-if (!deviceId) {
-  deviceId = Date.now() + "-" + Math.random();
-  localStorage.setItem("deviceId", deviceId);
-}
-
 const container = document.getElementById("buttons");
+const message = document.getElementById("message");
 
-// Criar botões
+let bloqueado = false;
+
 musicas.forEach(musica => {
 
   const btn = document.createElement("button");
@@ -108,36 +109,31 @@ musicas.forEach(musica => {
 
   btn.onclick = function () {
 
-    btn.disabled = true;
+    if (bloqueado) return;
 
-    const voteRef = database.ref("votes/" + musica + "/" + deviceId);
+    bloqueado = true;
 
-    voteRef.once("value").then(function(snapshot) {
+    const rankingRef = database.ref("ranking/" + musica);
 
-      if (snapshot.exists()) {
-        alert("Você já votou nessa música.");
-        btn.disabled = false;
-        return;
-      }
-
-      voteRef.set(true);
-
-      const rankingRef = database.ref("ranking/" + musica);
-
-      rankingRef.transaction(function(current) {
-        return (current || 0) + 1;
-      });
-
-      alert("Voto computado!");
-
+    rankingRef.transaction(function(current) {
+      return (current || 0) + 1;
     });
+
+    message.innerText = "✅ Voto computado! Próxima pessoa...";
+
+    document.querySelectorAll("button").forEach(b => b.disabled = true);
+
+    setTimeout(function() {
+      bloqueado = false;
+      message.innerText = "";
+      document.querySelectorAll("button").forEach(b => b.disabled = false);
+    }, 5000); // 5 segundos
 
   };
 
   container.appendChild(btn);
 });
 
-// Atualização ao vivo do ranking
 database.ref("ranking").on("value", function(snapshot) {
 
   const data = snapshot.val() || {};
