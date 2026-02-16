@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totem Money Talks - Ranking</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#111;
+    color:white;
+    text-align:center;
+}
+
+h1{
+    padding:20px;
+}
+
+.topButton{
+    margin-bottom:15px;
+    padding:15px 25px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    background:#333;
+    color:white;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    padding:20px;
+}
+
+button{
+    padding:25px;
+    font-size:18px;
+    border:none;
+    border-radius:12px;
+    background:#e10600;
+    color:white;
+}
+
+button:active{
+    background:#ff3b30;
+}
+
+#confirmScreen{
+    display:none;
+    padding:40px;
+}
+
+#rankingScreen{
+    display:none;
+    padding:20px;
+}
+
+.big{
+    font-size:28px;
+    margin:20px 0;
+}
+
+.rankItem{
+    font-size:22px;
+    margin:10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Escolha a próxima música</h1>
+
+<button class="topButton" onclick="abrirRanking()">
+Ver Ranking ao Vivo
+</button>
+
+<div class="grid" id="musicGrid"></div>
+
+<div id="confirmScreen">
+    <div class="big" id="selectedMusic"></div>
+    <button onclick="confirmVote()">Confirmar</button>
+</div>
+
+<div id="rankingScreen">
+    <h1>Ranking de votos</h1>
+    <div id="rankingList"></div>
+    <button onclick="voltarParaGrid()">Voltar</button>
+</div>
+
+<script>
+
+// Lista de músicas
+const musicas = [
+"Musica 1",
+"Musica 2",
+"Musica 3",
+"Musica 4",
+"Musica 5",
+"Musica 6"
+];
+
+// Inicializa votos
+let votos = {};
+musicas.forEach(m => votos[m] = 0);
+
+let escolhida = "";
+
+const grid = document.getElementById("musicGrid");
+
+// Cria botões
+musicas.forEach(m => {
+    const btn = document.createElement("button");
+    btn.innerText = m;
+    btn.onclick = () => escolher(m);
+    grid.appendChild(btn);
+});
+
+function escolher(m){
+    escolhida = m;
+    document.querySelector(".grid").style.display="none";
+    document.getElementById("confirmScreen").style.display="block";
+    document.getElementById("selectedMusic").innerText = m;
+}
+
+function confirmVote(){
+    votos[escolhida] += 1;
+    showRanking();
+    document.getElementById("confirmScreen").style.display="none";
+    document.getElementById("rankingScreen").style.display="block";
+}
+
+function abrirRanking(){
+    showRanking();
+    document.querySelector(".grid").style.display="none";
+    document.getElementById("confirmScreen").style.display="none";
+    document.getElementById("rankingScreen").style.display="block";
+}
+
+// Mostra ranking
+function showRanking(){
+    const rankingDiv = document.getElementById("rankingList");
+    rankingDiv.innerHTML = "";
+
+    const sorted = Object.entries(votos)
+        .sort((a,b) => b[1] - a[1]);
+
+    sorted.forEach(([m,v]) => {
+        const div = document.createElement("div");
+        div.className="rankItem";
+        div.innerText = `${m} — ${v} voto(s)`;
+        rankingDiv.appendChild(div);
+    });
+}
+
+function voltarParaGrid(){
+    document.getElementById("rankingScreen").style.display="none";
+    document.getElementById("confirmScreen").style.display="none";
+    document.querySelector(".grid").style.display="grid";
+}
+
+</script>
+
+</body>
+</html>
