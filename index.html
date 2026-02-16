@@ -3,260 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vote na Próxima Música</title>
+<title>Totem de Votação - Música</title>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
-  background: #111;
-  color: white;
+  background: #000;
+  color: #fff;
   text-align: center;
   padding: 20px;
 }
-.categoria { margin-top: 30px; }
+h1 { margin-bottom: 20px; }
+input[type="text"] {
+  width: 80%;
+  max-width: 400px;
+  padding: 12px;
+  font-size: 18px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: none;
+}
 button {
   display: block;
-  margin: 6px auto;
-  padding: 10px;
-  width: 95%;
-  max-width: 500px;
-  border: none;
-  border-radius: 8px;
-  background: #1db954;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-}
-button:disabled {
-  background: gray;
-  cursor: not-allowed;
-}
-#ranking {
-  margin-top: 40px;
-  text-align: left;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-#timer {
-  margin-top: 15px;
+  width: 80%;
+  max-width: 350px;
+  margin: 8px auto;
+  padding: 16px;
   font-size: 18px;
-  color: yellow;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #e10600;
+  color: white;
+  transition: 0.2s;
 }
-#status {
-  margin-top: 10px;
-  font-size: 14px;
-  color: red;
-}
+button:hover { background: #ff3b30; }
+button:disabled { background: gray; cursor: not-allowed; }
+
+h2 { margin-top: 40px; }
+.rankItem { font-size: 22px; margin: 6px 0; }
+#message { font-size: 22px; margin-top: 20px; color: #00ff88; }
+#countdown { font-size: 28px; color: #ffdd00; margin-top: 20px; }
+.category { font-size: 22px; margin-top: 25px; color: #00bfff; text-decoration: underline; }
 </style>
 </head>
+
 <body>
 
-<h1>🎵 Vote na próxima música</h1>
+<h1>Escolha a próxima música</h1>
+<input type="text" id="searchInput" placeholder="🔍 Buscar música ou artista">
 
-<div id="timer"></div>
-<div id="status"></div>
-<div id="musicas"></div>
+<div id="buttons"></div>
+<div id="message"></div>
+<div id="countdown"></div>
 
-<h2>🔥 Ranking ao vivo</h2>
-<div id="ranking"></div>
+<h2>Ranking ao Vivo</h2>
+<div id="rankingList"></div>
 
 <script>
-
+// CONFIGURAÇÃO DO FIREBASE
 const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  databaseURL: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a",
+  storageBucket: "totem-12c8a.appspot.com",
+  messagingSenderId: "308642629645",
+  appId: "1:308642629645:web:dfa6a4ce6dd85de4bced44"
 };
-
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-const statusDiv = document.getElementById("status");
-const timerDiv = document.getElementById("timer");
-const musicasDiv = document.getElementById("musicas");
-const rankingDiv = document.getElementById("ranking");
-
-let bloqueado = false;
-let tempoRestante = 5;
-
-const categorias = {
-
-"Rock Nacional": [
-"Os Paralamas do Sucesso – Meu Erro",
-"Skank – Garota Nacional",
-"Skank – Sutilmente",
-"Lobão – Me Chama",
-"Lobão – Blá, Blá, Blá... Eu Te Amo",
-"Lobão – Rádio Blá",
-"Barão Vermelho – Bete Balanço",
-"Frejat – Segredos",
-"Legião Urbana – Pais E Filhos",
-"Cazuza – Exagerado",
-"Titãs – Pra Dizer Adeus",
-"Djavan – Lilás"
-],
-
-"Grunge / Alternativo": [
-"Nirvana – Smells Like Teen Spirit",
-"Nirvana – Come As You Are",
-"Nirvana – Heart-Shaped Box",
-"Nirvana – About A Girl",
-"Nirvana – Drain You",
-"Pearl Jam – Soldier of Love",
-"Pearl Jam – Last Kiss",
-"Pearl Jam – Black",
-"Alice In Chains – Man In The Box",
-"Alice In Chains – Would?",
-"Alice In Chains – Down In A Hole",
-"Stone Temple Pilots – Plush",
-"Stone Temple Pilots – Interstate Love Song",
-"Stone Temple Pilots – Creep",
-"Radiohead – Creep",
-"Green Day – American Idiot",
-"The Smashing Pumpkins – 1979",
-"Queens of the Stone Age – No One Knows",
-"Queens of the Stone Age – Make It Wit Chu",
-"The White Stripes – Seven Nation Army",
-"Blur – Coffee & TV",
-"Oasis – Wonderwall",
-"Kings of Leon – Closer",
-"Foo Fighters – Everlong",
-"Natalie Imbruglia – Torn"
-],
-
-"Clássicos Rock": [
-"The Beatles – Come Together",
-"The Beatles – Hey Jude",
-"The Beatles – Let It Be",
-"Queen – Another One Bites The Dust",
-"Pink Floyd – Wish You Were Here",
-"Led Zeppelin – Immigrant Song",
-"Led Zeppelin – Rock And Roll",
-"Black Sabbath – Paranoid",
-"The Doors – Roadhouse Blues",
-"The Doors – Love Me Two Times",
-"The Doors – Riders On The Storm",
-"The Rolling Stones – Anybody Seen My Baby?",
-"Cream – White Room",
-"Cream – Sunshine Of Your Love",
-"Eric Clapton – Cocaine",
-"Lynyrd Skynyrd – Sweet Home Alabama",
-"Lynyrd Skynyrd – Simple Man",
-"Creedence Clearwater Revival – Proud Mary",
-"Creedence Clearwater Revival – Have You Ever Seen The Rain",
-"Creedence Clearwater Revival – Suzie Q",
-"Creedence Clearwater Revival – Born On The Bayou",
-"Creedence Clearwater Revival – Bad Moon Rising",
-"Creedence Clearwater Revival – Fortunate Son",
-"Survivor – Eye Of The Tiger",
-"Foghat – Slow Ride",
-"Tom Petty – Runnin' Down A Dream",
-"Foreigner – I Want To Know What Love Is"
-],
-
-"Pop / Outros": [
-"Tim Maia – Gostava Tanto de Você",
-"Tim Maia – Primavera (Vai Chuva)",
-"Elvis Presley – Suspicious Minds",
-"Ben E. King – Stand By Me",
-"U2 – With Or Without You",
-"U2 – Helter Skelter",
-"Commodores – Easy",
-"Tears For Fears – Everybody Wants To Rule The World",
-"Daft Punk – Get Lucky",
-"The Police – Roxanne",
-"The Police – Every Breath You Take",
-"INXS – Never Tear Us Apart",
-"INXS – Need You Tonight",
-"Chris Isaak – Wicked Game",
-"Billy Idol – White Wedding",
-"Phil Collins – I Don't Care Anymore",
-"The Outfield – Your Love",
-"Modjo – Lady",
-"Jimmy Cliff – I Can See Clearly Now",
-"Mike + The Mechanics – Over My Shoulder",
-"Sugar Ray – Every Morning",
-"Spin Doctors – Two Princes",
-"Lenny Kravitz – It Ain't Over 'Til It's Over",
-"Lenny Kravitz – Fly Away",
-"Maroon 5 – Sugar"
-]
-
+// CATEGORIAS DE MÚSICA
+const musicas = {
+  "Rock Nacional": {
+    "Paralamas do Sucesso": ["Meu Erro"],
+    "Skank": ["Garota Nacional", "Sutilmente"],
+    "Titãs": ["Pra Dizer Adeus"],
+    "Lobão": ["Me Chama","Blá, Blá, Blá... Eu Te Amo","Rádio Blá"],
+    "Barão Vermelho": ["Bete Balanço"],
+    "Legião Urbana": ["Pais E Filhos"]
+  },
+  "MPB/Soul": {
+    "Tim Maia": ["Gostava Tanto de Você","Primavera (Vai Chuva)"],
+    "Djavan": ["Lilás"],
+    "Ben E. King": ["Stand By Me"]
+  },
+  "Rock Internacional": {
+    "Nirvana": ["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
+    "Pearl Jam": ["Soldier of Love","Last Kiss","Black"],
+    "U2": ["With Or Without You","Helter Skelter"],
+    "Pink Floyd": ["Wish You Were Here"],
+    "Lynyrd Skynyrd": ["Sweet Home Alabama","Simple Man"],
+    "Foo Fighters": ["Everlong"],
+    "Radiohead": ["Creep"],
+    "Tears For Fears": ["Everybody Wants To Rule The World"],
+    "Daft Punk": ["Get Lucky"],
+    "Creedence Clearwater Revival": ["Proud Mary","Have You Ever Seen The Rain","Suzie Q","Born On The Bayou","Bad Moon Rising","Fortunate Son"],
+    "The Police": ["Roxanne","Every Breath You Take"],
+    "The Rolling Stones": ["Anybody Seen My Baby?"],
+    "Cream": ["White Room","Sunshine Of Your Love"],
+    "INXS": ["Never Tear Us Apart","Need You Tonight"],
+    "Led Zeppelin": ["Immigrant Song","Rock And Roll"],
+    "Queens of the Stone Age": ["No One Knows","Make It Wit Chu"],
+    "The Doors": ["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
+    "The White Stripes": ["Seven Nation Army"],
+    "Alice In Chains": ["Man In The Box","Would?","Down In A Hole"],
+    "Black Sabbath": ["Paranoid"],
+    "Stone Temple Pilots": ["Plush","Interstate Love Song","Creep"],
+    "Frejat": ["Segredos"],
+    "Billy Idol": ["White Wedding"],
+    "Tom Petty": ["Runnin' Down A Dream"],
+    "Foghat": ["Slow Ride"],
+    "Phil Collins": ["I Don't Care Anymore"],
+    "Cazuza": ["Exagerado"],
+    "Foreigner": ["I Want To Know What Love Is"],
+    "The Outfield": ["Your Love"],
+    "Modjo": ["Lady"],
+    "Blur": ["Coffee & TV"],
+    "Jimmy Cliff": ["I Can See Clearly Now"],
+    "Mike + The Mechanics": ["Over My Shoulder"],
+    "Sugar Ray": ["Every Morning"],
+    "Spin Doctors": ["Two Princes"],
+    "Lenny Kravitz": ["It Ain't Over 'Til It's Over","Fly Away"],
+    "Oasis": ["Wonderwall"],
+    "Maroon 5": ["Sugar"],
+    "Kings of Leon": ["Closer"],
+    "Green Day": ["American Idiot"],
+    "The Smashing Pumpkins": ["1979"]
+  },
+  "Clássicos e Rock Antigo": {
+    "Elvis Presley": ["Suspicious Minds"],
+    "The Beatles": ["Come Together","Hey Jude","Let It Be"],
+    "Queen": ["Another One Bites The Dust"],
+    "Eric Clapton": ["Cocaine"],
+    "Chris Isaak": ["Wicked Game"]
+  }
 };
 
-for (let categoria in categorias) {
-  const div = document.createElement("div");
-  div.className = "categoria";
-  div.innerHTML = `<h3>${categoria}</h3>`;
+const container = document.getElementById("buttons");
+const message = document.getElementById("message");
+const countdownDiv = document.getElementById("countdown");
+let bloqueado = false;
 
-  categorias[categoria].forEach(musica => {
-    const btn = document.createElement("button");
-    btn.innerText = musica;
-    btn.onclick = () => votar(musica);
-    div.appendChild(btn);
-  });
-
-  musicasDiv.appendChild(div);
+// RESET SECRETO
+if(location.search.includes("reset=12345")){
+  database.ref("ranking").set({});
+  database.ref("votes").set({});
+  alert("✅ Ranking zerado com sucesso!");
 }
 
-function votar(musica) {
-  if (bloqueado) return;
+// CRIA BOTÕES POR CATEGORIA E ARTISTA
+function criarBotoes(filter="") {
+  container.innerHTML = "";
+  Object.keys(musicas).forEach(categoria => {
+    let catDiv = document.createElement("div");
+    catDiv.className = "category";
+    catDiv.innerText = categoria;
+    container.appendChild(catDiv);
 
-  bloqueado = true;
-  statusDiv.innerText = "Salvando voto...";
+    const artistas = musicas[categoria];
+    Object.keys(artistas).forEach(artista => {
+      // verifica filtro
+      if(filter && !artista.toLowerCase().includes(filter) && !artistas[artista].some(m=>m.toLowerCase().includes(filter))) return;
 
-  const ref = database.ref("ranking").child(musica);
+      let artDiv = document.createElement("div");
+      artDiv.style.fontWeight = "bold";
+      artDiv.style.marginTop = "10px";
+      artDiv.innerText = artista;
+      container.appendChild(artDiv);
 
-  ref.transaction(current => (current || 0) + 1)
-    .then(() => {
-      statusDiv.innerText = "Voto salvo!";
-      iniciarTimer();
-    })
-    .catch(error => {
-      statusDiv.innerText = "Erro: " + error.message;
-      bloqueado = false;
+      artistas[artista].forEach(musica => {
+        const btn = document.createElement("button");
+        btn.innerText = musica;
+        btn.onclick = function() {
+          if(bloqueado) return;
+          bloqueado = true;
+
+          const rankingRef = database.ref("ranking/"+musica);
+          rankingRef.transaction(current => (current || 0)+1);
+
+          message.innerText = "✅ Voto computado!";
+          document.querySelectorAll("button").forEach(b=>b.disabled=true);
+
+          let tempo=5;
+          countdownDiv.innerText = `⏳ Próximo voto em: ${tempo}s`;
+          const interval = setInterval(()=>{
+            tempo--;
+            if(tempo>0){
+              countdownDiv.innerText = `⏳ Próximo voto em: ${tempo}s`;
+            } else {
+              clearInterval(interval);
+              bloqueado=false;
+              countdownDiv.innerText="";
+              message.innerText="";
+              document.querySelectorAll("button").forEach(b=>b.disabled=false);
+            }
+          },1000);
+        };
+        container.appendChild(btn);
+      });
     });
-}
-
-function iniciarTimer() {
-  tempoRestante = 5;
-  timerDiv.innerText = `⏳ Aguarde ${tempoRestante}s`;
-
-  const intervalo = setInterval(() => {
-    tempoRestante--;
-    timerDiv.innerText = `⏳ Aguarde ${tempoRestante}s`;
-
-    if (tempoRestante <= 0) {
-      clearInterval(intervalo);
-      bloqueado = false;
-      timerDiv.innerText = "";
-      statusDiv.innerText = "";
-    }
-  }, 1000);
-}
-
-database.ref("ranking").on("value", snapshot => {
-  const dados = snapshot.val() || {};
-  rankingDiv.innerHTML = "";
-
-  const ordenado = Object.entries(dados)
-    .sort((a,b) => b[1] - a[1]);
-
-  ordenado.forEach(item => {
-    const p = document.createElement("p");
-    p.innerText = `${item[0]} — ${item[1]} votos`;
-    rankingDiv.appendChild(p);
   });
+}
+
+// Inicializa os botões
+criarBotoes();
+
+// BUSCA
+const searchInput = document.getElementById("searchInput");
+searchInput.addEventListener("input", e=>{
+  criarBotoes(e.target.value.toLowerCase());
 });
 
+// RANKING AO VIVO
+database.ref("ranking").on("value", snapshot=>{
+  const data = snapshot.val() || {};
+  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  let html="";
+  sorted.forEach((item,index)=>{
+    html += "<div class='rankItem'>"+(index+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+  });
+  document.getElementById("rankingList").innerHTML=html;
+});
 </script>
+
 </body>
 </html>
