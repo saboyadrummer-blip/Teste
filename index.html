@@ -5,25 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Totem de Votação - Música</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
 body { font-family: Arial; background:#000; color:#fff; text-align:center; padding:20px; }
-h1 { margin-bottom: 20px; }
-input[type="text"] {
-  width: 80%; max-width:400px; padding:12px; font-size:18px; margin-bottom:20px;
-  border-radius:10px; border:none;
-}
+h1 { margin-bottom:20px; }
+input { width:80%; max-width:400px; padding:12px; font-size:18px; margin-bottom:20px; border-radius:10px; border:none; }
 button {
-  display:block; width:80%; max-width:350px; margin:8px auto; padding:16px;
-  font-size:18px; border:none; border-radius:12px; cursor:pointer; background:#e10600; color:white;
-  transition:0.2s;
+display:block; width:80%; max-width:350px; margin:8px auto; padding:16px;
+font-size:18px; border:none; border-radius:12px; cursor:pointer;
+background:#e10600; color:white;
 }
-button:hover { background:#ff3b30; }
-button:disabled { background: gray; cursor:not-allowed; }
-.rankItem { font-size:22px; margin:6px 0; }
+button:disabled { background:gray; cursor:not-allowed; }
+.rankItem { font-size:20px; margin:6px 0; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
 </style>
@@ -38,162 +33,183 @@ button:disabled { background: gray; cursor:not-allowed; }
 <div id="rankingList"></div>
 
 <script>
-// CONFIGURAÇÃO FIREBASE
+
 const firebaseConfig = {
-  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
-  authDomain: "totem-12c8a.firebaseapp.com",
-  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
-  projectId: "totem-12c8a",
-  storageBucket: "totem-12c8a.appspot.com",
-  messagingSenderId: "308642629645",
-  appId: "1:308642629645:web:dfa6a4ce6dd85de4bced44"
+apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+authDomain: "totem-12c8a.firebaseapp.com",
+databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+projectId: "totem-12c8a"
 };
+
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// RESET SECRETO VIA URL
 const urlParams = new URLSearchParams(window.location.search);
-if(urlParams.get("reset") === "12345"){
-  database.ref("ranking").set({}).then(()=>{
-    alert("Votos zerados!"); 
-    window.location.href = window.location.origin + window.location.pathname;
-  }).catch(err=>{
-    console.error("Erro ao zerar votos:", err);
-  });
+if(urlParams.get("reset")==="12345"){
+database.ref("ranking").set({});
+database.ref("executadas").set({});
+alert("Sistema resetado!");
+window.location.href = window.location.origin + window.location.pathname;
 }
 
-// TODAS AS MÚSICAS CATEGORIZADAS
 const musicas = {
-  "Rock Nacional": {
-    "Paralamas do Sucesso":["Meu Erro"],
-    "Skank":["Garota Nacional","Sutilmente"],
-    "Titãs":["Pra Dizer Adeus"],
-    "Lobão":["Me Chama","Blá, Blá, Blá... Eu Te Amo","Rádio Blá"],
-    "Barão Vermelho":["Bete Balanço"],
-    "Legião Urbana":["Pais E Filhos"]
-  },
-  "MPB/Soul": {
-    "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"],
-    "Djavan":["Lilás"],
-    "Ben E. King":["Stand By Me"]
-  },
-  "Rock Internacional": {
-    "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
-    "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
-    "U2":["With Or Without You","Helter Skelter"],
-    "Pink Floyd":["Wish You Were Here"],
-    "Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
-    "Foo Fighters":["Everlong"],
-    "Commodores":["Easy"],
-    "Radiohead":["Creep"],
-    "Tears For Fears":["Everybody Wants To Rule The World"],
-    "Daft Punk":["Get Lucky"],
-    "Creedence Clearwater Revival":["Proud Mary","Have You Ever Seen The Rain","Suzie Q","Born On The Bayou","Bad Moon Rising","Fortunate Son"],
-    "The Police":["Roxanne","Every Breath You Take"],
-    "The Rolling Stones":["Anybody Seen My Baby?"],
-    "Cream":["White Room","Sunshine Of Your Love"],
-    "INXS":["Never Tear Us Apart","Need You Tonight"],
-    "Led Zeppelin":["Immigrant Song","Rock And Roll"],
-    "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
-    "Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
-    "Black Sabbath":["Paranoid"],
-    "Stone Temple Pilots":["Plush","Interstate Love Song","Creep"],
-    "Frejat":["Segredos"],
-    "Billy Idol":["White Wedding"],
-    "Tom Petty":["Runnin' Down A Dream"],
-    "Foghat":["Slow Ride"],
-    "Phil Collins":["I Don't Care Anymore"],
-    "Foreigner":["I Want To Know What Love Is"],
-    "The Outfield":["Your Love"],
-    "Modjo":["Lady"],
-    "Blur":["Coffee & TV"],
-    "Jimmy Cliff":["I Can See Clearly Now"],
-    "Mike + The Mechanics":["Over My Shoulder"],
-    "Sugar Ray":["Every Morning"],
-    "Spin Doctors":["Two Princes"],
-    "Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
-    "Oasis":["Wonderwall"],
-    "Maroon 5":["Sugar"],
-    "Kings of Leon":["Closer"],
-    "Green Day":["American Idiot"],
-    "The Smashing Pumpkins":["1979"]
-  },
-  "Clássicos e Rock Antigo": {
-    "Elvis Presley":["Suspicious Minds"],
-    "The Beatles":["Come Together","Hey Jude","Let It Be"],
-    "Queen":["Another One Bites The Dust"],
-    "Eric Clapton":["Cocaine"],
-    "Chris Isaak":["Wicked Game"]
-  }
+
+"Rock Nacional": {
+"Os Paralamas do Sucesso":["Meu Erro"],
+"Skank":["Garota Nacional","Sutilmente"],
+"Titãs":["Pra Dizer Adeus"],
+"Lobão":["Me Chama","Rádio Blá"],
+"Barão Vermelho":["Bete Balanço"],
+"Legião Urbana":["Pais E Filhos"],
+"Cazuza":["Exagerado"],
+"Frejat":["Segredos"]
+},
+
+"MPB / Soul": {
+"Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"],
+"Ben E. King":["Stand By Me"]
+},
+
+"Grunge / Alternativo": {
+"Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
+"Pearl Jam":["Soldier of Love","Last Kiss","Black"],
+"Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
+"Stone Temple Pilots":["Plush","Interstate Love Song","Creep"],
+"The Smashing Pumpkins":["1979"],
+"Queens of the Stone Age":["No One Knows","Make It Wit Chu"]
+},
+
+"Rock Clássico Internacional": {
+"Elvis Presley":["Suspicious Minds"],
+"The Beatles":["Come Together","Hey Jude","Let It Be"],
+"Queen":["Another One Bites The Dust"],
+"Eric Clapton":["Cocaine"],
+"Cream":["White Room","Sunshine Of Your Love"],
+"Led Zeppelin":["Immigrant Song","Rock And Roll"],
+"Pink Floyd":["Wish You Were Here"],
+"The Rolling Stones":["Anybody Seen My Baby?"],
+"The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
+"The Police":["Roxanne","Every Breath You Take"],
+"Black Sabbath":["Paranoid"],
+"Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
+"Creedence Clearwater Revival":[
+"Proud Mary","Have You Ever Seen The Rain","Suzie Q",
+"Born On The Bayou","Bad Moon Rising","Fortunate Son"
+],
+"Foghat":["Slow Ride"],
+"Tom Petty":["Runnin' Down A Dream"]
+},
+
+"Rock / Pop 80s-2000s": {
+"U2":["With Or Without You","Helter Skelter"],
+"INXS":["Never Tear Us Apart","Need You Tonight"],
+"Phil Collins":["I Don't Care Anymore"],
+"Foreigner":["I Want To Know What Love Is"],
+"The Outfield":["Your Love"],
+"Tears For Fears":["Everybody Wants To Rule The World"],
+"Blur":["Coffee & TV"],
+"Modjo":["Lady"],
+"Mike + The Mechanics":["Over My Shoulder"],
+"Jimmy Cliff":["I Can See Clearly Now"],
+"Sugar Ray":["Every Morning"],
+"Spin Doctors":["Two Princes"],
+"Billy Idol":["White Wedding"],
+"Survivor":["Eye Of The Tiger"],
+"Commodores":["Easy"]
+},
+
+"Rock Moderno": {
+"Foo Fighters":["Everlong"],
+"Green Day":["American Idiot"],
+"Kings of Leon":["Closer"],
+"Maroon 5":["Sugar"],
+"Oasis":["Wonderwall"],
+"Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
+"Radiohead":["Creep"],
+"Daft Punk":["Get Lucky"],
+"The White Stripes":["Seven Nation Army"],
+"Chris Isaak":["Wicked Game"]
+}
+
 };
 
 const container = document.getElementById("buttons");
 
-// CRIAR BOTÕES COM FILTRO
-function criarBotoes(filter="") {
-  container.innerHTML="";
-  Object.keys(musicas).forEach(categoria=>{
-    const catDiv = document.createElement("div");
-    catDiv.className="category";
-    catDiv.innerText=categoria;
-    container.appendChild(catDiv);
+function criarBotoes(filter=""){
+container.innerHTML="";
+Object.keys(musicas).forEach(cat=>{
+const catDiv=document.createElement("div");
+catDiv.className="category";
+catDiv.innerText=cat;
+container.appendChild(catDiv);
 
-    const artistas = musicas[categoria];
-    Object.keys(artistas).forEach(artista=>{
-      if(filter && !artista.toLowerCase().includes(filter) && !artistas[artista].some(m=>m.toLowerCase().includes(filter))) return;
-      const artDiv = document.createElement("div");
-      artDiv.className="artist";
-      artDiv.innerText=artista;
-      container.appendChild(artDiv);
+Object.keys(musicas[cat]).forEach(artista=>{
+const artDiv=document.createElement("div");
+artDiv.className="artist";
+artDiv.innerText=artista;
+container.appendChild(artDiv);
 
-      artistas[artista].forEach(musica=>{
-        const btn = document.createElement("button");
-        btn.innerText=musica;
-        btn.onclick=()=>voteMusica(musica, btn);
-        container.appendChild(btn);
-      });
-    });
-  });
+musicas[cat][artista].forEach(musica=>{
+if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
+
+const btn=document.createElement("button");
+btn.innerText=musica;
+
+database.ref("executadas/"+musica).on("value",snap=>{
+if(snap.val()===true){
+btn.disabled=true;
+btn.innerText=musica+" (Música já executada)";
+}else{
+btn.disabled=false;
+btn.innerText=musica;
 }
-
-// VOTO COM MENSAGEM "Próximo voto em X segundos"
-function voteMusica(musica, button) {
-  button.disabled = true;
-  const originalText = button.innerText;
-  let tempo = 5;
-
-  database.ref("ranking/" + musica).transaction(v => (v || 0) + 1);
-
-  const interval = setInterval(() => {
-    if(tempo > 0){
-      button.innerText = `Próximo voto em ${tempo}s`;
-      tempo--;
-    } else {
-      clearInterval(interval);
-      button.innerText = originalText;
-      button.disabled = false;
-    }
-  }, 1000);
-}
-
-// BUSCA
-document.getElementById("searchInput").addEventListener("input", e=>{
-  criarBotoes(e.target.value.toLowerCase());
 });
 
-// RANKING AO VIVO
-database.ref("ranking").on("value", snap=>{
-  const data = snap.val()||{};
-  const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
-  let html="";
-  sorted.forEach((item,i)=>{
-    html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
-  });
-  document.getElementById("rankingList").innerHTML=html;
+btn.onclick=()=>voteMusica(musica,btn);
+container.appendChild(btn);
+});
+});
+});
+}
+
+function voteMusica(musica,button){
+database.ref("executadas/"+musica).once("value").then(snap=>{
+if(snap.val()===true){
+alert("Música já executada");
+return;
+}
+button.disabled=true;
+let tempo=5;
+database.ref("ranking/"+musica).transaction(v=>(v||0)+1);
+const interval=setInterval(()=>{
+if(tempo>0){
+button.innerText="Próximo voto em "+tempo+"s";
+tempo--;
+}else{
+clearInterval(interval);
+button.innerText=musica;
+button.disabled=false;
+}
+},1000);
+});
+}
+
+document.getElementById("searchInput").addEventListener("input",e=>{
+criarBotoes(e.target.value.toLowerCase());
+});
+
+database.ref("ranking").on("value",snap=>{
+const data=snap.val()||{};
+const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+let html="";
+sorted.forEach((item,i)=>{
+html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+});
+document.getElementById("rankingList").innerHTML=html;
 });
 
 criarBotoes();
-</script>
 
+</script>
 </body>
 </html>
