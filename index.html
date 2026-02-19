@@ -10,47 +10,73 @@
 
 <style>
 body { font-family: Arial; background:#000; color:#fff; text-align:center; padding:20px; }
-h1 { margin-bottom: 20px; }
+h1 { margin-bottom:20px; }
 input { width:80%; max-width:400px; padding:12px; font-size:18px; margin-bottom:20px; border-radius:10px; border:none; }
 button {
-  display:block; width:80%; max-width:350px; margin:8px auto; padding:16px;
-  font-size:18px; border:none; border-radius:12px; cursor:pointer; background:#e10600; color:white;
+display:block; width:80%; max-width:350px; margin:8px auto; padding:16px;
+font-size:18px; border:none; border-radius:12px; cursor:pointer; background:#e10600; color:white;
 }
 button:disabled { background:gray; cursor:not-allowed; }
 .rankItem { font-size:20px; margin:6px 0; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
+#bloqueado { font-size:22px; margin-top:40px; }
 </style>
 </head>
 <body>
 
-<h1>Escolha a próxima música</h1>
-<input type="text" id="searchInput" placeholder="🔍 Buscar música ou artista">
-<div id="buttons"></div>
-
-<h2>Ranking ao Vivo</h2>
-<div id="rankingList"></div>
+<div id="conteudo"></div>
 
 <script>
+
 const firebaseConfig = {
-  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
-  authDomain: "totem-12c8a.firebaseapp.com",
-  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
-  projectId: "totem-12c8a"
+apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+authDomain: "totem-12c8a.firebaseapp.com",
+databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+projectId: "totem-12c8a"
 };
+
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// RESET SECRETO
-const urlParams = new URLSearchParams(window.location.search);
-if(urlParams.get("reset")==="12345"){
-  database.ref("ranking").set({});
-  database.ref("executadas").set({});
-  alert("Sistema resetado!");
-  window.location.href = window.location.origin + window.location.pathname;
+const conteudo = document.getElementById("conteudo");
+
+// ===== VERIFICA SE SISTEMA ESTÁ ATIVO =====
+
+database.ref("sistemaStatus").on("value", snap => {
+
+const status = snap.val();
+
+if(status !== "on"){
+
+conteudo.innerHTML = `
+<h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
+<div id="bloqueado">🔒 Votação temporariamente indisponível.</div>
+`;
+
+return;
 }
 
-// LISTA COMPLETA (86 músicas - Lilás removida)
+// ===== SE ESTIVER ATIVO, CARREGA SISTEMA =====
+
+conteudo.innerHTML = `
+<h1>Escolha a próxima música</h1>
+<input type="text" id="searchInput" placeholder="🔍 Buscar música ou artista">
+<div id="buttons"></div>
+<h2>Ranking ao Vivo</h2>
+<div id="rankingList"></div>
+`;
+
+iniciarSistema();
+
+});
+
+// ===== SISTEMA NORMAL =====
+
+function iniciarSistema(){
+
+const container = document.getElementById("buttons");
+
 const musicas = {
 "Rock Nacional": {
 "Os Paralamas do Sucesso":["Meu Erro"],
@@ -114,108 +140,104 @@ const musicas = {
 }
 };
 
-const container = document.getElementById("buttons");
-
 function criarBotoes(filter=""){
-  container.innerHTML="";
-  let encontrou = false;
+container.innerHTML="";
+let encontrou=false;
 
-  Object.keys(musicas).forEach(cat=>{
-    let categoriaTemResultado = false;
-    let catDiv = document.createElement("div");
+Object.keys(musicas).forEach(cat=>{
+let categoriaTemResultado=false;
+let catDiv=document.createElement("div");
 
-    Object.keys(musicas[cat]).forEach(artista=>{
-      let artistaTemResultado = false;
-      let artistaDiv = document.createElement("div");
+Object.keys(musicas[cat]).forEach(artista=>{
+let artistaTemResultado=false;
+let artistaDiv=document.createElement("div");
 
-      musicas[cat][artista].forEach(musica=>{
-        if(filter && 
-           !musica.toLowerCase().includes(filter) && 
-           !artista.toLowerCase().includes(filter)) return;
+musicas[cat][artista].forEach(musica=>{
+if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
 
-        encontrou = true;
-        categoriaTemResultado = true;
-        artistaTemResultado = true;
+encontrou=true;
+categoriaTemResultado=true;
+artistaTemResultado=true;
 
-        const btn=document.createElement("button");
-        btn.innerText=musica;
+const btn=document.createElement("button");
+btn.innerText=musica;
 
-        database.ref("executadas/"+musica).on("value",snap=>{
-          if(snap.val()===true){
-            btn.disabled=true;
-            btn.innerText=musica+" (Música já executada)";
-          } else {
-            btn.disabled=false;
-            btn.innerText=musica;
-          }
-        });
+database.ref("executadas/"+musica).on("value",snap=>{
+if(snap.val()===true){
+btn.disabled=true;
+btn.innerText=musica+" (Música já executada)";
+} else {
+btn.disabled=false;
+btn.innerText=musica;
+}
+});
 
-        btn.onclick=()=>voteMusica(musica,btn);
-        artistaDiv.appendChild(btn);
-      });
+btn.onclick=()=>voteMusica(musica,btn);
+artistaDiv.appendChild(btn);
+});
 
-      if(artistaTemResultado){
-        let artTitle=document.createElement("div");
-        artTitle.className="artist";
-        artTitle.innerText=artista;
-        catDiv.appendChild(artTitle);
-        catDiv.appendChild(artistaDiv);
-      }
-    });
+if(artistaTemResultado){
+let artTitle=document.createElement("div");
+artTitle.className="artist";
+artTitle.innerText=artista;
+catDiv.appendChild(artTitle);
+catDiv.appendChild(artistaDiv);
+}
+});
 
-    if(categoriaTemResultado){
-      let catTitle=document.createElement("div");
-      catTitle.className="category";
-      catTitle.innerText=cat;
-      container.appendChild(catTitle);
-      container.appendChild(catDiv);
-    }
-  });
+if(categoriaTemResultado){
+let catTitle=document.createElement("div");
+catTitle.className="category";
+catTitle.innerText=cat;
+container.appendChild(catTitle);
+container.appendChild(catDiv);
+}
+});
 
-  if(!encontrou){
-    container.innerHTML="<h2>❌ Música não encontrada</h2>";
-  }
+if(!encontrou){
+container.innerHTML="<h2>❌ Música não encontrada</h2>";
+}
 }
 
 function voteMusica(musica,button){
-  database.ref("executadas/"+musica).once("value").then(snap=>{
-    if(snap.val()===true){
-      alert("Música já executada");
-      return;
-    }
+database.ref("executadas/"+musica).once("value").then(snap=>{
+if(snap.val()===true){
+alert("Música já executada");
+return;
+}
+button.disabled=true;
+let tempo=5;
+database.ref("ranking/"+musica).transaction(v=>(v||0)+1);
 
-    button.disabled=true;
-    let tempo=5;
-    database.ref("ranking/"+musica).transaction(v=>(v||0)+1);
-
-    const interval=setInterval(()=>{
-      if(tempo>0){
-        button.innerText="Próximo voto em "+tempo+"s";
-        tempo--;
-      } else {
-        clearInterval(interval);
-        button.innerText=musica;
-        button.disabled=false;
-      }
-    },1000);
-  });
+const interval=setInterval(()=>{
+if(tempo>0){
+button.innerText="Próximo voto em "+tempo+"s";
+tempo--;
+}else{
+clearInterval(interval);
+button.innerText=musica;
+button.disabled=false;
+}
+},1000);
+});
 }
 
 document.getElementById("searchInput").addEventListener("input",e=>{
-  criarBotoes(e.target.value.toLowerCase());
+criarBotoes(e.target.value.toLowerCase());
 });
 
 database.ref("ranking").on("value",snap=>{
-  const data=snap.val()||{};
-  const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
-  let html="";
-  sorted.forEach((item,i)=>{
-    html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
-  });
-  document.getElementById("rankingList").innerHTML=html;
+const data=snap.val()||{};
+const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+let html="";
+sorted.forEach((item,i)=>{
+html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+});
+document.getElementById("rankingList").innerHTML=html;
 });
 
 criarBotoes();
+}
 </script>
 
 </body>
