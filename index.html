@@ -30,10 +30,10 @@ button:disabled { background:gray; cursor:not-allowed; }
 <script>
 
 const firebaseConfig = {
-apiKey: "SUA_API_KEY",
-authDomain: "SEU_AUTH_DOMAIN",
-databaseURL: "SEU_DATABASE_URL",
-projectId: "SEU_PROJECT_ID"
+apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+authDomain: "totem-12c8a.firebaseapp.com",
+databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+projectId: "totem-12c8a"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -41,6 +41,7 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 database.ref("sistemaStatus").on("value", snap => {
+
 const status = snap.val();
 
 if(status !== "on"){
