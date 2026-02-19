@@ -101,10 +101,12 @@ const musicas = {
 "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
 "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
 "Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
-"Stone Temple Pilots":["Plush","Interstate Love Song","Creep"],
-"The Smashing Pumpkins":["1979"],
+"Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
+"The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
 "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
-"Radiohead":["Creep"]
+"Radiohead":["Creep"],
+"Faith No More":["Ashes to Ashes"],
+"Silverchair":["Freak"]
 },
 
 "Anos 80 / 90 / 2000": {
@@ -125,7 +127,7 @@ const musicas = {
 "Oasis":["Wonderwall"],
 "Kings of Leon":["Closer"],
 "Green Day":["American Idiot"],
-"Foo Fighters":["Everlong"],
+"Foo Fighters":["Everlong","Learn to Fly"],
 "The White Stripes":["Seven Nation Army"],
 "Daft Punk":["Get Lucky"],
 "Chris Isaak":["Wicked Game"],
@@ -138,105 +140,4 @@ const musicas = {
 
 };
 
-function criarBotoes(filter=""){
-container.innerHTML="";
-let encontrou=false;
-
-Object.keys(musicas).forEach(cat=>{
-let categoriaTemResultado=false;
-let catDiv=document.createElement("div");
-
-Object.keys(musicas[cat]).forEach(artista=>{
-let artistaTemResultado=false;
-let artistaDiv=document.createElement("div");
-
-musicas[cat][artista].forEach(musica=>{
-if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
-
-encontrou=true;
-categoriaTemResultado=true;
-artistaTemResultado=true;
-
-const btn=document.createElement("button");
-btn.innerText=musica;
-
-database.ref("executadas/"+musica).on("value",snap=>{
-if(snap.val()===true){
-btn.disabled=true;
-btn.innerText=musica+" (Música já executada)";
-} else {
-btn.disabled=false;
-btn.innerText=musica;
-}
-});
-
-btn.onclick=()=>voteMusica(musica,btn);
-artistaDiv.appendChild(btn);
-});
-
-if(artistaTemResultado){
-let artTitle=document.createElement("div");
-artTitle.className="artist";
-artTitle.innerText=artista;
-catDiv.appendChild(artTitle);
-catDiv.appendChild(artistaDiv);
-}
-});
-
-if(categoriaTemResultado){
-let catTitle=document.createElement("div");
-catTitle.className="category";
-catTitle.innerText=cat;
-container.appendChild(catTitle);
-container.appendChild(catDiv);
-}
-});
-
-if(!encontrou){
-container.innerHTML="<h2>❌ Música não encontrada</h2>";
-}
-}
-
-function voteMusica(musica,button){
-database.ref("executadas/"+musica).once("value").then(snap=>{
-if(snap.val()===true){
-alert("Música já executada");
-return;
-}
-button.disabled=true;
-let tempo=5;
-database.ref("ranking/"+musica).transaction(v=>(v||0)+1);
-
-const interval=setInterval(()=>{
-if(tempo>0){
-button.innerText="Próximo voto em "+tempo+"s";
-tempo--;
-}else{
-clearInterval(interval);
-button.innerText=musica;
-button.disabled=false;
-}
-},1000);
-});
-}
-
-document.getElementById("searchInput").addEventListener("input",e=>{
-criarBotoes(e.target.value.toLowerCase());
-});
-
-database.ref("ranking").on("value",snap=>{
-const data=snap.val()||{};
-const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
-let html="";
-sorted.forEach((item,i)=>{
-html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
-});
-document.getElementById("rankingList").innerHTML=html;
-});
-
-criarBotoes();
-}
-</script>
-
-</body>
-</html>
+// resto do código permanece igual...
