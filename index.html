@@ -41,23 +41,17 @@ const database = firebase.database();
 
 const conteudo = document.getElementById("conteudo");
 
-// ===== VERIFICA SE SISTEMA ESTÁ ATIVO =====
-
 database.ref("sistemaStatus").on("value", snap => {
 
 const status = snap.val();
 
 if(status !== "on"){
-
 conteudo.innerHTML = `
 <h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
 <div id="bloqueado">🔒 Votação temporariamente indisponível.</div>
 `;
-
 return;
 }
-
-// ===== SE ESTIVER ATIVO, CARREGA SISTEMA =====
 
 conteudo.innerHTML = `
 <h1>Escolha a próxima música</h1>
@@ -68,16 +62,14 @@ conteudo.innerHTML = `
 `;
 
 iniciarSistema();
-
 });
-
-// ===== SISTEMA NORMAL =====
 
 function iniciarSistema(){
 
 const container = document.getElementById("buttons");
 
 const musicas = {
+
 "Rock Nacional": {
 "Os Paralamas do Sucesso":["Meu Erro"],
 "Skank":["Garota Nacional","Sutilmente"],
@@ -88,6 +80,7 @@ const musicas = {
 "Titãs":["Pra Dizer Adeus"],
 "Lobão":["Me Chama","Rádio Blá"]
 },
+
 "Clássicos Internacionais": {
 "Elvis Presley":["Suspicious Minds"],
 "The Beatles":["Come Together","Hey Jude","Let It Be"],
@@ -103,6 +96,7 @@ const musicas = {
 "Survivor":["Eye Of The Tiger"],
 "Foghat":["Slow Ride"]
 },
+
 "Grunge / Alternativo": {
 "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
 "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
@@ -112,6 +106,7 @@ const musicas = {
 "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
 "Radiohead":["Creep"]
 },
+
 "Anos 80 / 90 / 2000": {
 "U2":["With Or Without You","Helter Skelter"],
 "INXS":["Never Tear Us Apart","Need You Tonight"],
@@ -133,11 +128,14 @@ const musicas = {
 "Foo Fighters":["Everlong"],
 "The White Stripes":["Seven Nation Army"],
 "Daft Punk":["Get Lucky"],
-"Chris Isaak":["Wicked Game"]
+"Chris Isaak":["Wicked Game"],
+"Urge Overkill":["Girl, You'll Be a Woman Soon"]
 },
+
 "Soul / Brasil": {
 "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
 }
+
 };
 
 function criarBotoes(filter=""){
