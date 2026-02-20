@@ -26,6 +26,7 @@ button:disabled { background:gray; cursor:not-allowed; }
 <div id="conteudo"></div>
 
 <script>
+
 const firebaseConfig = {
 apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
 authDomain: "totem-12c8a.firebaseapp.com",
@@ -38,13 +39,17 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
-let temporizadores = {}; // guarda tempo restante por música
+let bloqueado = false;
+let tempoRestante = 0;
+let temporizadorAtual = null;
 
+// Listener para músicas executadas
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
-  criarBotoes(document.getElementById("searchInput")?.value.toLowerCase() || "");
+  criarBotoes(document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase() : "");
 });
 
+// Listener para status do sistema
 database.ref("sistemaStatus").on("value", snap => {
   const status = snap.val();
 
@@ -160,14 +165,11 @@ function iniciarSistema(){
 
           if(musicasExecutadas[musica]){
             btn.innerText="🔒 "+musica+" (Já executada)";
-            btn.disabled = true;
+            btn.disabled=true;
             btn.classList.add("executada");
-          } else if(temporizadores[musica] > 0){
-            btn.disabled = true;
-            btn.innerText = musica + " (⏳ " + temporizadores[musica] + "s)";
           } else {
-            btn.innerText = musica;
-            btn.onclick = () => voteMusica(musica);
+            btn.innerText=musica;
+            btn.onclick=()=>voteMusica(musica);
           }
 
           artistaDiv.appendChild(btn);
@@ -197,41 +199,57 @@ function iniciarSistema(){
   }
 
   function voteMusica(musica){
-    if(temporizadores[musica] > 0) return;
+    if(bloqueado) return;
+
+    bloqueado = true;
+    tempoRestante = 30;
 
     database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
 
-    temporizadores[musica] = 30;
-    const intervalo = setInterval(()=>{
-      temporizadores[musica]--;
-      criarBotoes(document.getElementById("searchInput").value.toLowerCase());
+    const todosBotoes = document.querySelectorAll("#buttons button[data-nome='"+musica+"']");
 
-      if(temporizadores[musica] <= 0){
-        clearInterval(intervalo);
-        temporizadores[musica] = 0;
-        criarBotoes(document.getElementById("searchInput").value.toLowerCase());
+    todosBotoes.forEach(btn=>{
+      btn.disabled = true;
+      btn.innerText = musica + " ⏳ Aguarde "+tempoRestante+"s";
+    });
+
+    if(temporizadorAtual) clearInterval(temporizadorAtual);
+
+    temporizadorAtual = setInterval(() => {
+      tempoRestante--;
+      todosBotoes.forEach(btn=>{
+        btn.innerText = musica + " ⏳ Aguarde "+tempoRestante+"s";
+      });
+      if(tempoRestante <= 0){
+        clearInterval(temporizadorAtual);
+        todosBotoes.forEach(btn=>{
+          if(!musicasExecutadas[musica]){
+            btn.disabled = false;
+            btn.innerText = btn.getAttribute("data-nome");
+          }
+        });
+        bloqueado = false;
       }
     }, 1000);
-
-    criarBotoes(document.getElementById("searchInput").value.toLowerCase());
   }
 
-  document.getElementById("searchInput").addEventListener("input", e=>{
+  document.getElementById("searchInput").addEventListener("input",e=>{
     criarBotoes(e.target.value.toLowerCase());
   });
 
-  database.ref("ranking").on("value", snap=>{
-    const data = snap.val() || {};
-    const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
-    let html = "";
+  database.ref("ranking").on("value",snap=>{
+    const data=snap.val()||{};
+    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    let html="";
     sorted.forEach((item,i)=>{
       html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
     });
-    document.getElementById("rankingList").innerHTML = html;
+    document.getElementById("rankingList").innerHTML=html;
   });
 
   criarBotoes();
 }
+
 </script>
 </body>
 </html>
