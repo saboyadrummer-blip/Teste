@@ -18,6 +18,7 @@ button:disabled { background:gray; cursor:not-allowed; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
 .executada { background:#444 !important; }
+#bloqueado { font-size:22px; margin-top:40px; }
 </style>
 </head>
 <body>
@@ -25,12 +26,11 @@ button:disabled { background:gray; cursor:not-allowed; }
 <div id="conteudo"></div>
 
 <script>
-
 const firebaseConfig = {
-apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
-authDomain: "totem-12c8a.firebaseapp.com",
-databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
-projectId: "totem-12c8a"
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -38,18 +38,15 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
+let temporizadorAtivo = {}; // Guarda temporizadores por música
 
-// Atualiza em tempo real quando música é marcada como executada ou desbloqueada
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
-  if(document.getElementById("searchInput")){
-    criarBotoes(document.getElementById("searchInput").value.toLowerCase());
-  }
+  atualizarBotoesExecutadas();
 });
 
 database.ref("sistemaStatus").on("value", snap => {
   const status = snap.val();
-
   if(status !== "on"){
     conteudo.innerHTML = `
       <h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
@@ -57,7 +54,6 @@ database.ref("sistemaStatus").on("value", snap => {
     `;
     return;
   }
-
   conteudo.innerHTML = `
     <h1>Escolha a próxima música</h1>
     <input type="text" id="searchInput" placeholder="🔍 Buscar música ou artista">
@@ -65,7 +61,6 @@ database.ref("sistemaStatus").on("value", snap => {
     <h2>Ranking ao Vivo</h2>
     <div id="rankingList"></div>
   `;
-
   iniciarSistema();
 });
 
@@ -141,7 +136,6 @@ function iniciarSistema(){
     "Soul / Brasil": {
       "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
     }
-
   };
 
   function criarBotoes(filter=""){
@@ -170,9 +164,12 @@ function iniciarSistema(){
             btn.innerText="🔒 "+musica+" (Já executada)";
             btn.disabled=true;
             btn.classList.add("executada");
-          }else{
-            btn.innerText=musica;
-            btn.onclick=()=>voteMusica(btn, musica);
+          } else if(temporizadorAtivo[musica]){
+            btn.disabled = true;
+            btn.innerText = musica + " ⏳ Aguarde "+temporizadorAtivo[musica]+"s";
+          } else {
+            btn.innerText = musica;
+            btn.onclick=()=>voteMusica(musica);
           }
 
           artistaDiv.appendChild(btn);
@@ -201,25 +198,43 @@ function iniciarSistema(){
     }
   }
 
-  function voteMusica(botao, musica){
+  function voteMusica(musica){
+    // Vota na música
+    database.ref("ranking/"+musica).transaction(v => (v||0)+1);
 
-    botao.disabled = true;
-    let tempo = 30;
+    // Aplica temporizador de 30s só na música votada
+    temporizadorAtivo[musica] = 30;
+    atualizarBotoesExecutadas();
 
-    database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
+    const intervalo = setInterval(()=>{
+      temporizadorAtivo[musica]--;
+      atualizarBotoesExecutadas();
 
-    const intervalo = setInterval(() => {
-      tempo--;
-      botao.innerText = musica + " ⏳ Aguarde " + tempo + "s";
-
-      if(tempo <= 0){
+      if(temporizadorAtivo[musica] <= 0){
         clearInterval(intervalo);
-        if(!musicasExecutadas[musica]){
-          botao.disabled = false;
-          botao.innerText = musica;
-        }
+        delete temporizadorAtivo[musica];
+        atualizarBotoesExecutadas();
       }
     }, 1000);
+  }
+
+  function atualizarBotoesExecutadas(){
+    document.querySelectorAll("#buttons button").forEach(btn=>{
+      const nome = btn.getAttribute("data-nome");
+      if(musicasExecutadas[nome]){
+        btn.innerText = "🔒 "+nome+" (Já executada)";
+        btn.disabled = true;
+        btn.classList.add("executada");
+      } else if(temporizadorAtivo[nome]){
+        btn.disabled = true;
+        btn.innerText = nome + " ⏳ Aguarde "+temporizadorAtivo[nome]+"s";
+        btn.classList.remove("executada");
+      } else {
+        btn.disabled = false;
+        btn.innerText = nome;
+        btn.classList.remove("executada");
+      }
+    });
   }
 
   document.getElementById("searchInput").addEventListener("input",e=>{
@@ -238,7 +253,6 @@ function iniciarSistema(){
 
   criarBotoes();
 }
-
 </script>
 </body>
 </html>
