@@ -12,23 +12,8 @@
 body { font-family: Arial; background:#000; color:#fff; text-align:center; padding:20px; }
 h1 { margin-bottom:20px; }
 input { width:80%; max-width:400px; padding:12px; font-size:18px; margin-bottom:20px; border-radius:10px; border:none; }
-
-button {
-display:block;
-width:80%;
-max-width:350px;
-margin:8px auto;
-padding:16px;
-font-size:18px;
-border:none;
-border-radius:12px;
-cursor:pointer;
-background:#e10600;
-color:white;
-}
-
+button { display:block; width:80%; max-width:350px; margin:8px auto; padding:16px; font-size:18px; border:none; border-radius:12px; cursor:pointer; background:#e10600; color:white; }
 button:disabled { background:gray; cursor:not-allowed; }
-
 .rankItem { font-size:20px; margin:6px 0; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
@@ -84,182 +69,196 @@ database.ref("sistemaStatus").on("value", snap => {
 });
 
 function iniciarSistema(){
+  const container = document.getElementById("buttons");
 
-const container = document.getElementById("buttons");
+  const musicas = {
 
-const musicas = {
+    "Rock Nacional": {
+      "Os Paralamas do Sucesso":["Meu Erro"],
+      "Skank":["Garota Nacional","Sutilmente"],
+      "Barão Vermelho":["Bete Balanço"],
+      "Legião Urbana":["Pais E Filhos","Tempo Perdido"],
+      "Cazuza":["Exagerado"],
+      "Frejat":["Segredos"],
+      "Titãs":["Pra Dizer Adeus"],
+      "Lobão":["Me Chama","Rádio Blá"]
+    },
 
-"Rock Nacional": {
-"Os Paralamas do Sucesso":["Meu Erro"],
-"Skank":["Garota Nacional","Sutilmente"],
-"Barão Vermelho":["Bete Balanço"],
-"Legião Urbana":["Pais E Filhos","Tempo Perdido"],
-"Cazuza":["Exagerado"],
-"Frejat":["Segredos"],
-"Titãs":["Pra Dizer Adeus"],
-"Lobão":["Me Chama","Rádio Blá"]
-},
+    "Clássicos Internacionais": {
+      "Elvis Presley":["Suspicious Minds"],
+      "The Beatles":["Come Together","Hey Jude","Let It Be"],
+      "Ben E. King":["Stand By Me"],
+      "Pink Floyd":["Wish You Were Here"],
+      "Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
+      "Commodores":["Easy"],
+      "Eric Clapton":["Cocaine"],
+      "Queen":["Another One Bites The Dust"],
+      "The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
+      "Cream":["White Room","Sunshine Of Your Love"],
+      "Black Sabbath":["Paranoid"],
+      "Survivor":["Eye Of The Tiger"],
+      "Foghat":["Slow Ride"]
+    },
 
-"Clássicos Internacionais": {
-"Elvis Presley":["Suspicious Minds"],
-"The Beatles":["Come Together","Hey Jude","Let It Be"],
-"Ben E. King":["Stand By Me"],
-"Pink Floyd":["Wish You Were Here"],
-"Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
-"Commodores":["Easy"],
-"Eric Clapton":["Cocaine"],
-"Queen":["Another One Bites The Dust"],
-"The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
-"Cream":["White Room","Sunshine Of Your Love"],
-"Black Sabbath":["Paranoid"],
-"Survivor":["Eye Of The Tiger"],
-"Foghat":["Slow Ride"]
-},
+    "Grunge / Alternativo": {
+      "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
+      "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
+      "Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
+      "Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
+      "The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
+      "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
+      "Radiohead":["Creep"],
+      "Faith No More":["Ashes to Ashes"],
+      "Silverchair":["Freak"]
+    },
 
-"Grunge / Alternativo": {
-"Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
-"Pearl Jam":["Soldier of Love","Last Kiss","Black"],
-"Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
-"Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
-"The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
-"Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
-"Radiohead":["Creep"],
-"Faith No More":["Ashes to Ashes"],
-"Silverchair":["Freak"]
-},
+    "Anos 80 / 90 / 2000": {
+      "U2":["With Or Without You","Helter Skelter"],
+      "INXS":["Never Tear Us Apart","Need You Tonight"],
+      "Phil Collins":["I Don't Care Anymore"],
+      "Tears For Fears":["Everybody Wants To Rule The World"],
+      "Blur":["Coffee & TV"],
+      "Modjo":["Lady"],
+      "Jimmy Cliff":["I Can See Clearly Now"],
+      "Mike + The Mechanics":["Over My Shoulder"],
+      "Sugar Ray":["Every Morning"],
+      "Spin Doctors":["Two Princes"],
+      "Foreigner":["I Want To Know What Love Is"],
+      "The Outfield":["Your Love"],
+      "Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
+      "Maroon 5":["Sugar"],
+      "Oasis":["Wonderwall"],
+      "Kings of Leon":["Closer"],
+      "Green Day":["American Idiot"],
+      "Foo Fighters":["Everlong","Learn to Fly"],
+      "The White Stripes":["Seven Nation Army"],
+      "Daft Punk":["Get Lucky"],
+      "Chris Isaak":["Wicked Game"],
+      "Urge Overkill":["Girl, You'll Be a Woman Soon"]
+    },
 
-"Anos 80 / 90 / 2000": {
-"U2":["With Or Without You","Helter Skelter"],
-"INXS":["Never Tear Us Apart","Need You Tonight"],
-"Phil Collins":["I Don't Care Anymore"],
-"Tears For Fears":["Everybody Wants To Rule The World"],
-"Blur":["Coffee & TV"],
-"Modjo":["Lady"],
-"Jimmy Cliff":["I Can See Clearly Now"],
-"Mike + The Mechanics":["Over My Shoulder"],
-"Sugar Ray":["Every Morning"],
-"Spin Doctors":["Two Princes"],
-"Foreigner":["I Want To Know What Love Is"],
-"The Outfield":["Your Love"],
-"Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
-"Maroon 5":["Sugar"],
-"Oasis":["Wonderwall"],
-"Kings of Leon":["Closer"],
-"Green Day":["American Idiot"],
-"Foo Fighters":["Everlong","Learn to Fly"],
-"The White Stripes":["Seven Nation Army"],
-"Daft Punk":["Get Lucky"],
-"Chris Isaak":["Wicked Game"],
-"Urge Overkill":["Girl, You'll Be a Woman Soon"]
-},
+    "Soul / Brasil": {
+      "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
+    }
 
-"Soul / Brasil": {
-"Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
-}
+  };
 
-};
+  function criarBotoes(filter=""){
+    container.innerHTML="";
+    let encontrou=false;
 
-function criarBotoes(filter=""){
-  container.innerHTML="";
-  let encontrou=false;
+    Object.keys(musicas).forEach(cat=>{
+      let categoriaTemResultado=false;
+      let catDiv=document.createElement("div");
 
-  Object.keys(musicas).forEach(cat=>{
-    let categoriaTemResultado=false;
-    let catDiv=document.createElement("div");
+      Object.keys(musicas[cat]).forEach(artista=>{
+        let artistaTemResultado=false;
+        let artistaDiv=document.createElement("div");
 
-    Object.keys(musicas[cat]).forEach(artista=>{
-      let artistaTemResultado=false;
-      let artistaDiv=document.createElement("div");
+        musicas[cat][artista].forEach(musica=>{
+          if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
 
-      musicas[cat][artista].forEach(musica=>{
-        if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
+          encontrou=true;
+          categoriaTemResultado=true;
+          artistaTemResultado=true;
 
-        encontrou=true;
-        categoriaTemResultado=true;
-        artistaTemResultado=true;
+          const btn=document.createElement("button");
+          btn.setAttribute("data-nome", musica);
 
-        const btn=document.createElement("button");
-        btn.setAttribute("data-nome", musica);
+          if(musicasExecutadas[musica]){
+            btn.innerText="🔒 "+musica+" (Já executada)";
+            btn.disabled=true;
+            btn.classList.add("executada");
+          }else{
+            btn.innerText=musica;
+            btn.onclick=()=>voteMusica(musica);
+          }
 
-        if(musicasExecutadas[musica]){
-          btn.innerText="🔒 "+musica+" (Já executada)";
-          btn.disabled=true;
-          btn.classList.add("executada");
-        }else{
-          btn.innerText=musica;
-          btn.onclick=()=>voteMusica(musica);
+          artistaDiv.appendChild(btn);
+        });
+
+        if(artistaTemResultado){
+          let artTitle=document.createElement("div");
+          artTitle.className="artist";
+          artTitle.innerText=artista;
+          catDiv.appendChild(artTitle);
+          catDiv.appendChild(artistaDiv);
         }
-
-        artistaDiv.appendChild(btn);
       });
 
-      if(artistaTemResultado){
-        let artTitle=document.createElement("div");
-        artTitle.className="artist";
-        artTitle.innerText=artista;
-        catDiv.appendChild(artTitle);
-        catDiv.appendChild(artistaDiv);
+      if(categoriaTemResultado){
+        let catTitle=document.createElement("div");
+        catTitle.className="category";
+        catTitle.innerText=cat;
+        container.appendChild(catTitle);
+        container.appendChild(catDiv);
       }
     });
 
-    if(categoriaTemResultado){
-      let catTitle=document.createElement("div");
-      catTitle.className="category";
-      catTitle.innerText=cat;
-      container.appendChild(catTitle);
-      container.appendChild(catDiv);
+    if(!encontrou){
+      container.innerHTML="<h2>❌ Música não encontrada</h2>";
     }
-  });
-
-  if(!encontrou){
-    container.innerHTML="<h2>❌ Música não encontrada</h2>";
   }
-}
 
-function voteMusica(musica){
-  if(bloqueado) return;
+  function voteMusica(musica){
 
-  bloqueado = true;
-  tempoRestante = 30;
+    if(bloqueado) return;
 
-  database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
+    // Marca música executada no Firebase
+    database.ref("executadas/"+musica).set(true);
 
-  const btnVotada = document.querySelector("#buttons button[data-nome='"+musica+"']");
+    // Aplica temporizador só para a música clicada
+    bloqueado = true;
+    tempoRestante = 30;
 
-  btnVotada.disabled = true;
-  btnVotada.innerText = "⏳ Aguarde " + tempoRestante + "s";
+    database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
 
-  const intervalo = setInterval(() => {
-    tempoRestante--;
+    const todosBotoes = document.querySelectorAll("#buttons button[data-nome='"+musica+"']");
 
-    if(tempoRestante > 0){
-      btnVotada.innerText = "⏳ Aguarde " + tempoRestante + "s";
-    }else{
-      clearInterval(intervalo);
-      btnVotada.disabled = false;
-      btnVotada.innerText = musica;
-      bloqueado = false;
-    }
+    todosBotoes.forEach(btn=>{
+      btn.disabled = true;
+      btn.innerText = "⏳ Aguarde "+tempoRestante+"s";
+    });
 
-  }, 1000);
-}
+    const intervalo = setInterval(() => {
+      tempoRestante--;
 
-document.getElementById("searchInput").addEventListener("input",e=>{
-  criarBotoes(e.target.value.toLowerCase());
-});
+      todosBotoes.forEach(btn=>{
+        btn.innerText = "⏳ Aguarde "+tempoRestante+"s";
+      });
 
-database.ref("ranking").on("value",snap=>{
-  const data=snap.val()||{};
-  const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
-  let html="";
-  sorted.forEach((item,i)=>{
-    html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+      if(tempoRestante <= 0){
+        clearInterval(intervalo);
+        todosBotoes.forEach(btn=>{
+          if(!musicasExecutadas[musica]){
+            btn.disabled = false;
+            btn.innerText = btn.getAttribute("data-nome");
+          }
+        });
+        bloqueado = false;
+      }
+    }, 1000);
+
+    criarBotoes(document.getElementById("searchInput").value.toLowerCase());
+  }
+
+  document.getElementById("searchInput").addEventListener("input",e=>{
+    criarBotoes(e.target.value.toLowerCase());
   });
-  document.getElementById("rankingList").innerHTML=html;
-});
 
-criarBotoes();
+  database.ref("ranking").on("value",snap=>{
+    const data=snap.val()||{};
+    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    let html="";
+    sorted.forEach((item,i)=>{
+      html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+    });
+    document.getElementById("rankingList").innerHTML=html;
+  });
+
+  criarBotoes();
+}
 
 </script>
 </body>
-  </html>
+</html>
