@@ -18,7 +18,6 @@ button:disabled { background:gray; cursor:not-allowed; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
 .executada { background:#444 !important; }
-#bloqueado { font-size:22px; margin-top:40px; }
 </style>
 </head>
 <body>
@@ -40,6 +39,7 @@ const conteudo = document.getElementById("conteudo");
 let musicasExecutadas = {};
 let bloqueadoMusicas = {}; // temporizador por música
 
+// **Atualização em tempo real**
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
   criarBotoes(document.getElementById("searchInput")?.value?.toLowerCase() || "");
@@ -157,13 +157,11 @@ function iniciarSistema(){
           const btn=document.createElement("button");
           btn.setAttribute("data-nome", musica);
 
-          // Música executada
           if(musicasExecutadas[musica]){
             btn.innerText="🔒 "+musica+" (Já executada)";
             btn.disabled = true;
             btn.classList.add("executada");
           } else if(bloqueadoMusicas[musica]){
-            // Temporizador ativo
             btn.disabled = true;
             btn.innerText = musica+" ⏳ Aguarde "+bloqueadoMusicas[musica]+"s";
           } else {
