@@ -58,17 +58,18 @@ let temporizadores = {};
 
 const musicas = {
 
-/* SUA LISTA — NÃO ALTERADA */
-
 "Rock Nacional": {
 "Os Paralamas do Sucesso":["Meu Erro"],
 "Skank":["Garota Nacional","Sutilmente"],
 "Barão Vermelho":["Bete Balanço"],
-"Legião Urbana":["Pais E Filhos","Tempo Perdido"],
+"Legião Urbana":["Pais e Filhos","Tempo Perdido"],
 "Cazuza":["Exagerado"],
 "Frejat":["Segredos"],
-"Titãs":["Pra Dizer Adeus"],
-"Lobão":["Me Chama","Rádio Blá"]
+"Titãs":["Pra Dizer Adeus","Sonífera Ilha","É Preciso Saber Viver","Epitáfio"],
+"Lobão":["Me Chama","Rádio Blá"],
+"Ira!":["Tarde Vazia","Envelheço na Cidade"],
+"Capital Inicial":["Primeiros Erros","À Sua Maneira"],
+"Los Hermanos":["Anna Júlia"]
 },
 
 "Clássicos Internacionais": {
@@ -84,51 +85,61 @@ const musicas = {
 "Cream":["White Room","Sunshine Of Your Love"],
 "Black Sabbath":["Paranoid"],
 "Survivor":["Eye Of The Tiger"],
-"Foghat":["Slow Ride"]
+"Foghat":["Slow Ride"],
+"CHIC":["Le Freak","Good Times"],
+"KC & The Sunshine Band":["Keep It Comin Love","Shake Your Booty"],
+"Bill Withers":["Lovely Day"],
+"The Ides Of March":["Vehicle"]
 },
 
 "Grunge / Alternativo": {
-"Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
-"Pearl Jam":["Soldier of Love","Last Kiss","Black"],
-"Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
+"Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart Shaped Box","About A Girl","Drain You"],
+"Pearl Jam":["Soldier Of Love","Last Kiss","Black"],
+"Alice In Chains":["Man In The Box","Would","Down In A Hole"],
 "Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
 "The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
-"Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
+"Queens Of The Stone Age":["No One Knows","Make It Wit Chu"],
 "Radiohead":["Creep"],
-"Faith No More":["Ashes to Ashes"],
-"Silverchair":["Freak"]
+"Faith No More":["Ashes To Ashes"],
+"Silverchair":["Freak"],
+"The Wallflowers":["One Headlight"],
+"Audioslave":["Like A Stone"],
+"Wilderado":["Surefire"]
 },
 
 "Anos 80 / 90 / 2000": {
-"U2":["With Or Without You","Helter Skelter"],
+"U2":["With Or Without You","Helter Skelter","I Still Havent Found What Im Looking For"],
 "INXS":["Never Tear Us Apart","Need You Tonight"],
-"Phil Collins":["I Don't Care Anymore"],
+"Phil Collins":["I Dont Care Anymore"],
 "Tears For Fears":["Everybody Wants To Rule The World"],
-"Blur":["Coffee & TV"],
+"Blur":["Coffee And TV"],
 "Modjo":["Lady"],
 "Jimmy Cliff":["I Can See Clearly Now"],
-"Mike + The Mechanics":["Over My Shoulder"],
+"Mike And The Mechanics":["Over My Shoulder"],
 "Sugar Ray":["Every Morning"],
 "Spin Doctors":["Two Princes"],
 "Foreigner":["I Want To Know What Love Is"],
 "The Outfield":["Your Love"],
-"Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
+"Lenny Kravitz":["It Aint Over Til Its Over","Fly Away"],
 "Maroon 5":["Sugar"],
-"Oasis":["Wonderwall"],
-"Kings of Leon":["Closer"],
-"Green Day":["American Idiot"],
-"Foo Fighters":["Everlong","Learn to Fly"],
+"Oasis":["Wonderwall","Dont Look Back In Anger"],
+"Kings Of Leon":["Closer"],
+"Green Day":["American Idiot","Basket Case"],
+"Foo Fighters":["Everlong","Learn To Fly"],
 "The White Stripes":["Seven Nation Army"],
 "Daft Punk":["Get Lucky"],
 "Chris Isaak":["Wicked Game"],
-"Urge Overkill":["Girl, You'll Be a Woman Soon"]
+"Urge Overkill":["Girl Youll Be A Woman Soon"],
+"Big Mountain":["Baby I Love Your Way"]
 },
 
 "Soul / Brasil": {
-"Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
+"Tim Maia":["Gostava Tanto De Você","Primavera"]
 }
 
 };
+
+/* ===== RESTANTE DO SISTEMA INALTERADO ===== */
 
 function criarBotoes(filter=""){
 container.innerHTML="";
