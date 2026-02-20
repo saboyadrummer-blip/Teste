@@ -18,7 +18,6 @@ button:disabled { background:gray; cursor:not-allowed; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
 .executada { background:#444 !important; }
-#bloqueado { font-size:22px; margin-top:40px; }
 </style>
 </head>
 <body>
@@ -39,8 +38,6 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
-let bloqueado = false;
-let tempoRestante = 0;
 
 // Atualiza em tempo real quando música é marcada como executada ou desbloqueada
 database.ref("executadas").on("value", snap => {
@@ -175,7 +172,7 @@ function iniciarSistema(){
             btn.classList.add("executada");
           }else{
             btn.innerText=musica;
-            btn.onclick=()=>voteMusica(musica);
+            btn.onclick=()=>voteMusica(btn, musica);
           }
 
           artistaDiv.appendChild(btn);
@@ -204,41 +201,25 @@ function iniciarSistema(){
     }
   }
 
-  function voteMusica(musica){
+  function voteMusica(botao, musica){
 
-    if(bloqueado) return;
-
-    bloqueado = true;
-    tempoRestante = 30;
+    botao.disabled = true;
+    let tempo = 30;
 
     database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
 
-    const todosBotoes = document.querySelectorAll("#buttons button[data-nome='"+musica+"']");
-
-    todosBotoes.forEach(btn=>{
-      btn.disabled = true;
-      btn.innerText = musica + " ⏳ Aguarde "+tempoRestante+"s";
-    });
-
     const intervalo = setInterval(() => {
-      tempoRestante--;
+      tempo--;
+      botao.innerText = musica + " ⏳ Aguarde " + tempo + "s";
 
-      todosBotoes.forEach(btn=>{
-        btn.innerText = musica + " ⏳ Aguarde "+tempoRestante+"s";
-      });
-
-      if(tempoRestante <= 0){
+      if(tempo <= 0){
         clearInterval(intervalo);
-        todosBotoes.forEach(btn=>{
-          if(!musicasExecutadas[musica]){
-            btn.disabled = false;
-            btn.innerText = musica;
-          }
-        });
-        bloqueado = false;
+        if(!musicasExecutadas[musica]){
+          botao.disabled = false;
+          botao.innerText = musica;
+        }
       }
     }, 1000);
-
   }
 
   document.getElementById("searchInput").addEventListener("input",e=>{
