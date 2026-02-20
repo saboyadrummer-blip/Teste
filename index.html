@@ -27,10 +27,7 @@ background:#e10600;
 color:white;
 }
 
-button:disabled {
-background:gray;
-cursor:not-allowed;
-}
+button:disabled { background:gray; cursor:not-allowed; }
 
 .rankItem { font-size:20px; margin:6px 0; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
@@ -87,189 +84,181 @@ database.ref("sistemaStatus").on("value", snap => {
 });
 
 function iniciarSistema(){
-  const container = document.getElementById("buttons");
 
-  const musicas = {
+const container = document.getElementById("buttons");
 
-    "Rock Nacional": {
-      "Os Paralamas do Sucesso":["Meu Erro"],
-      "Skank":["Garota Nacional","Sutilmente"],
-      "Barão Vermelho":["Bete Balanço"],
-      "Legião Urbana":["Pais E Filhos","Tempo Perdido"],
-      "Cazuza":["Exagerado"],
-      "Frejat":["Segredos"],
-      "Titãs":["Pra Dizer Adeus"],
-      "Lobão":["Me Chama","Rádio Blá"]
-    },
+const musicas = {
 
-    "Clássicos Internacionais": {
-      "Elvis Presley":["Suspicious Minds"],
-      "The Beatles":["Come Together","Hey Jude","Let It Be"],
-      "Ben E. King":["Stand By Me"],
-      "Pink Floyd":["Wish You Were Here"],
-      "Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
-      "Commodores":["Easy"],
-      "Eric Clapton":["Cocaine"],
-      "Queen":["Another One Bites The Dust"],
-      "The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
-      "Cream":["White Room","Sunshine Of Your Love"],
-      "Black Sabbath":["Paranoid"],
-      "Survivor":["Eye Of The Tiger"],
-      "Foghat":["Slow Ride"]
-    },
+"Rock Nacional": {
+"Os Paralamas do Sucesso":["Meu Erro"],
+"Skank":["Garota Nacional","Sutilmente"],
+"Barão Vermelho":["Bete Balanço"],
+"Legião Urbana":["Pais E Filhos","Tempo Perdido"],
+"Cazuza":["Exagerado"],
+"Frejat":["Segredos"],
+"Titãs":["Pra Dizer Adeus"],
+"Lobão":["Me Chama","Rádio Blá"]
+},
 
-    "Grunge / Alternativo": {
-      "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
-      "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
-      "Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
-      "Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
-      "The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
-      "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
-      "Radiohead":["Creep"],
-      "Faith No More":["Ashes to Ashes"],
-      "Silverchair":["Freak"],
-      "Urge Overkill":["Girl, You'll Be a Woman Soon"]
-    },
+"Clássicos Internacionais": {
+"Elvis Presley":["Suspicious Minds"],
+"The Beatles":["Come Together","Hey Jude","Let It Be"],
+"Ben E. King":["Stand By Me"],
+"Pink Floyd":["Wish You Were Here"],
+"Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
+"Commodores":["Easy"],
+"Eric Clapton":["Cocaine"],
+"Queen":["Another One Bites The Dust"],
+"The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
+"Cream":["White Room","Sunshine Of Your Love"],
+"Black Sabbath":["Paranoid"],
+"Survivor":["Eye Of The Tiger"],
+"Foghat":["Slow Ride"]
+},
 
-    "Anos 80 / 90 / 2000": {
-      "U2":["With Or Without You","Helter Skelter"],
-      "INXS":["Never Tear Us Apart","Need You Tonight"],
-      "Phil Collins":["I Don't Care Anymore"],
-      "Tears For Fears":["Everybody Wants To Rule The World"],
-      "Blur":["Coffee & TV"],
-      "Modjo":["Lady"],
-      "Jimmy Cliff":["I Can See Clearly Now"],
-      "Mike + The Mechanics":["Over My Shoulder"],
-      "Sugar Ray":["Every Morning"],
-      "Spin Doctors":["Two Princes"],
-      "Foreigner":["I Want To Know What Love Is"],
-      "The Outfield":["Your Love"],
-      "Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
-      "Maroon 5":["Sugar"],
-      "Oasis":["Wonderwall"],
-      "Kings of Leon":["Closer"],
-      "Green Day":["American Idiot"],
-      "Foo Fighters":["Everlong","Learn to Fly"],
-      "The White Stripes":["Seven Nation Army"],
-      "Daft Punk":["Get Lucky"],
-      "Chris Isaak":["Wicked Game"]
-    },
+"Grunge / Alternativo": {
+"Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
+"Pearl Jam":["Soldier of Love","Last Kiss","Black"],
+"Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
+"Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
+"The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
+"Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
+"Radiohead":["Creep"],
+"Faith No More":["Ashes to Ashes"],
+"Silverchair":["Freak"]
+},
 
-    "Soul / Brasil": {
-      "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
-    }
+"Anos 80 / 90 / 2000": {
+"U2":["With Or Without You","Helter Skelter"],
+"INXS":["Never Tear Us Apart","Need You Tonight"],
+"Phil Collins":["I Don't Care Anymore"],
+"Tears For Fears":["Everybody Wants To Rule The World"],
+"Blur":["Coffee & TV"],
+"Modjo":["Lady"],
+"Jimmy Cliff":["I Can See Clearly Now"],
+"Mike + The Mechanics":["Over My Shoulder"],
+"Sugar Ray":["Every Morning"],
+"Spin Doctors":["Two Princes"],
+"Foreigner":["I Want To Know What Love Is"],
+"The Outfield":["Your Love"],
+"Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
+"Maroon 5":["Sugar"],
+"Oasis":["Wonderwall"],
+"Kings of Leon":["Closer"],
+"Green Day":["American Idiot"],
+"Foo Fighters":["Everlong","Learn to Fly"],
+"The White Stripes":["Seven Nation Army"],
+"Daft Punk":["Get Lucky"],
+"Chris Isaak":["Wicked Game"],
+"Urge Overkill":["Girl, You'll Be a Woman Soon"]
+},
 
-  };
-
-  function criarBotoes(filter=""){
-    container.innerHTML="";
-    let encontrou=false;
-
-    Object.keys(musicas).forEach(cat=>{
-      let categoriaTemResultado=false;
-      let catDiv=document.createElement("div");
-
-      Object.keys(musicas[cat]).forEach(artista=>{
-        let artistaTemResultado=false;
-        let artistaDiv=document.createElement("div");
-
-        musicas[cat][artista].forEach(musica=>{
-          if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
-
-          encontrou=true;
-          categoriaTemResultado=true;
-          artistaTemResultado=true;
-
-          const btn=document.createElement("button");
-          btn.setAttribute("data-nome", musica);
-
-          if(musicasExecutadas[musica]){
-            btn.innerText="🔒 "+musica+" (Já executada)";
-            btn.disabled=true;
-            btn.classList.add("executada");
-          }else{
-            btn.innerText=musica;
-            btn.onclick=()=>voteMusica(musica);
-          }
-
-          artistaDiv.appendChild(btn);
-        });
-
-        if(artistaTemResultado){
-          let artTitle=document.createElement("div");
-          artTitle.className="artist";
-          artTitle.innerText=artista;
-          catDiv.appendChild(artTitle);
-          catDiv.appendChild(artistaDiv);
-        }
-      });
-
-      if(categoriaTemResultado){
-        let catTitle=document.createElement("div");
-        catTitle.className="category";
-        catTitle.innerText=cat;
-        container.appendChild(catTitle);
-        container.appendChild(catDiv);
-      }
-    });
-
-    if(!encontrou){
-      container.innerHTML="<h2>❌ Música não encontrada</h2>";
-    }
-  }
-
-  function voteMusica(musica){
-    if(bloqueado) return;
-
-    bloqueado = true;
-    tempoRestante = 30;
-
-    database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
-
-    const todosBotoes = document.querySelectorAll("#buttons button");
-
-    const intervalo = setInterval(() => {
-      tempoRestante--;
-
-      todosBotoes.forEach(btn => {
-        if(!btn.classList.contains("executada")){
-          btn.innerText = "⏳ Aguarde " + tempoRestante + "s";
-          btn.disabled = true;
-        }
-      });
-
-      if(tempoRestante <= 0){
-        clearInterval(intervalo);
-
-        todosBotoes.forEach(btn => {
-          if(!btn.classList.contains("executada")){
-            btn.disabled = false;
-            btn.innerText = btn.getAttribute("data-nome");
-          }
-        });
-
-        bloqueado = false;
-      }
-
-    }, 1000);
-  }
-
-  document.getElementById("searchInput").addEventListener("input",e=>{
-    criarBotoes(e.target.value.toLowerCase());
-  });
-
-  database.ref("ranking").on("value",snap=>{
-    const data=snap.val()||{};
-    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
-    let html="";
-    sorted.forEach((item,i)=>{
-      html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
-    });
-    document.getElementById("rankingList").innerHTML=html;
-  });
-
-  criarBotoes();
+"Soul / Brasil": {
+"Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
 }
+
+};
+
+function criarBotoes(filter=""){
+  container.innerHTML="";
+  let encontrou=false;
+
+  Object.keys(musicas).forEach(cat=>{
+    let categoriaTemResultado=false;
+    let catDiv=document.createElement("div");
+
+    Object.keys(musicas[cat]).forEach(artista=>{
+      let artistaTemResultado=false;
+      let artistaDiv=document.createElement("div");
+
+      musicas[cat][artista].forEach(musica=>{
+        if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
+
+        encontrou=true;
+        categoriaTemResultado=true;
+        artistaTemResultado=true;
+
+        const btn=document.createElement("button");
+        btn.setAttribute("data-nome", musica);
+
+        if(musicasExecutadas[musica]){
+          btn.innerText="🔒 "+musica+" (Já executada)";
+          btn.disabled=true;
+          btn.classList.add("executada");
+        }else{
+          btn.innerText=musica;
+          btn.onclick=()=>voteMusica(musica);
+        }
+
+        artistaDiv.appendChild(btn);
+      });
+
+      if(artistaTemResultado){
+        let artTitle=document.createElement("div");
+        artTitle.className="artist";
+        artTitle.innerText=artista;
+        catDiv.appendChild(artTitle);
+        catDiv.appendChild(artistaDiv);
+      }
+    });
+
+    if(categoriaTemResultado){
+      let catTitle=document.createElement("div");
+      catTitle.className="category";
+      catTitle.innerText=cat;
+      container.appendChild(catTitle);
+      container.appendChild(catDiv);
+    }
+  });
+
+  if(!encontrou){
+    container.innerHTML="<h2>❌ Música não encontrada</h2>";
+  }
+}
+
+function voteMusica(musica){
+  if(bloqueado) return;
+
+  bloqueado = true;
+  tempoRestante = 30;
+
+  database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
+
+  const btnVotada = document.querySelector("#buttons button[data-nome='"+musica+"']");
+
+  btnVotada.disabled = true;
+  btnVotada.innerText = "⏳ Aguarde " + tempoRestante + "s";
+
+  const intervalo = setInterval(() => {
+    tempoRestante--;
+
+    if(tempoRestante > 0){
+      btnVotada.innerText = "⏳ Aguarde " + tempoRestante + "s";
+    }else{
+      clearInterval(intervalo);
+      btnVotada.disabled = false;
+      btnVotada.innerText = musica;
+      bloqueado = false;
+    }
+
+  }, 1000);
+}
+
+document.getElementById("searchInput").addEventListener("input",e=>{
+  criarBotoes(e.target.value.toLowerCase());
+});
+
+database.ref("ranking").on("value",snap=>{
+  const data=snap.val()||{};
+  const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  let html="";
+  sorted.forEach((item,i)=>{
+    html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
+  });
+  document.getElementById("rankingList").innerHTML=html;
+});
+
+criarBotoes();
 
 </script>
 </body>
