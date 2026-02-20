@@ -42,13 +42,15 @@ let musicasExecutadas = {};
 let bloqueado = false;
 let tempoRestante = 0;
 
+// Atualiza músicas executadas vindas do admin
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
+  criarBotoes(document.getElementById("searchInput")?.value?.toLowerCase());
 });
 
+// Status do sistema
 database.ref("sistemaStatus").on("value", snap => {
   const status = snap.val();
-
   if(status !== "on"){
     conteudo.innerHTML = `
       <h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
@@ -201,16 +203,12 @@ function iniciarSistema(){
   }
 
   function voteMusica(musica){
-
     if(bloqueado) return;
 
-    // Marca música executada no Firebase
-    database.ref("executadas/"+musica).set(true);
-
-    // Aplica temporizador só para a música clicada
     bloqueado = true;
     tempoRestante = 30;
 
+    // Incrementa ranking
     database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
 
     const todosBotoes = document.querySelectorAll("#buttons button[data-nome='"+musica+"']");
