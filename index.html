@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Totem de Votação - Música</title>
+<title>Totem de Votação - Money Talks</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -35,9 +35,7 @@ cursor:not-allowed;
 .rankItem { font-size:20px; margin:6px 0; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
-.executada {
-background: #444 !important;
-}
+.executada { background:#444 !important; }
 #bloqueado { font-size:22px; margin-top:40px; }
 </style>
 </head>
@@ -48,10 +46,10 @@ background: #444 !important;
 <script>
 
 const firebaseConfig = {
-apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
-authDomain: "totem-12c8a.firebaseapp.com",
-databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
-projectId: "totem-12c8a"
+apiKey: "SUA_API_KEY_AQUI",
+authDomain: "SEU_AUTH_DOMAIN",
+databaseURL: "SUA_DATABASE_URL",
+projectId: "SEU_PROJECT_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -59,6 +57,8 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
+let bloqueado = false;
+let tempoRestante = 0;
 
 database.ref("executadas").on("value", snap => {
 musicasExecutadas = snap.val() || {};
@@ -176,6 +176,7 @@ let artistaTemResultado=false;
 let artistaDiv=document.createElement("div");
 
 musicas[cat][artista].forEach(musica=>{
+
 if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
 
 encontrou=true;
@@ -183,6 +184,7 @@ categoriaTemResultado=true;
 artistaTemResultado=true;
 
 const btn=document.createElement("button");
+btn.setAttribute("data-nome", musica);
 
 if(musicasExecutadas[musica]){
 btn.innerText="🔒 "+musica+" (Já executada)";
@@ -220,7 +222,42 @@ container.innerHTML="<h2>❌ Música não encontrada</h2>";
 }
 
 function voteMusica(musica){
-database.ref("ranking/"+musica).transaction(v=>(v||0)+1);
+
+if(bloqueado) return;
+
+bloqueado = true;
+tempoRestante = 30;
+
+database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
+
+const todosBotoes = document.querySelectorAll("#buttons button");
+
+const intervalo = setInterval(() => {
+
+tempoRestante--;
+
+todosBotoes.forEach(btn => {
+if(!btn.classList.contains("executada")){
+btn.innerText = "⏳ Aguarde " + tempoRestante + "s";
+btn.disabled = true;
+}
+});
+
+if(tempoRestante <= 0){
+clearInterval(intervalo);
+
+todosBotoes.forEach(btn => {
+if(!btn.classList.contains("executada")){
+btn.disabled = false;
+btn.innerText = btn.getAttribute("data-nome");
+}
+});
+
+bloqueado = false;
+}
+
+}, 1000);
+
 }
 
 document.getElementById("searchInput").addEventListener("input",e=>{
