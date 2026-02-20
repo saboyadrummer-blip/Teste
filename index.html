@@ -26,7 +26,6 @@ button:disabled { background:gray; cursor:not-allowed; }
 <div id="conteudo"></div>
 
 <script>
-
 const firebaseConfig = {
 apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
 authDomain: "totem-12c8a.firebaseapp.com",
@@ -39,18 +38,16 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
-let bloqueado = false;
-let tempoRestante = 0;
+let temporizadores = {}; // guarda tempo restante por música
 
-// Atualiza músicas executadas vindas do admin
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
-  criarBotoes(document.getElementById("searchInput")?.value?.toLowerCase());
+  criarBotoes(document.getElementById("searchInput")?.value.toLowerCase() || "");
 });
 
-// Status do sistema
 database.ref("sistemaStatus").on("value", snap => {
   const status = snap.val();
+
   if(status !== "on"){
     conteudo.innerHTML = `
       <h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
@@ -74,7 +71,6 @@ function iniciarSistema(){
   const container = document.getElementById("buttons");
 
   const musicas = {
-
     "Rock Nacional": {
       "Os Paralamas do Sucesso":["Meu Erro"],
       "Skank":["Garota Nacional","Sutilmente"],
@@ -85,7 +81,6 @@ function iniciarSistema(){
       "Titãs":["Pra Dizer Adeus"],
       "Lobão":["Me Chama","Rádio Blá"]
     },
-
     "Clássicos Internacionais": {
       "Elvis Presley":["Suspicious Minds"],
       "The Beatles":["Come Together","Hey Jude","Let It Be"],
@@ -101,7 +96,6 @@ function iniciarSistema(){
       "Survivor":["Eye Of The Tiger"],
       "Foghat":["Slow Ride"]
     },
-
     "Grunge / Alternativo": {
       "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
       "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
@@ -113,7 +107,6 @@ function iniciarSistema(){
       "Faith No More":["Ashes to Ashes"],
       "Silverchair":["Freak"]
     },
-
     "Anos 80 / 90 / 2000": {
       "U2":["With Or Without You","Helter Skelter"],
       "INXS":["Never Tear Us Apart","Need You Tonight"],
@@ -138,11 +131,9 @@ function iniciarSistema(){
       "Chris Isaak":["Wicked Game"],
       "Urge Overkill":["Girl, You'll Be a Woman Soon"]
     },
-
     "Soul / Brasil": {
       "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
     }
-
   };
 
   function criarBotoes(filter=""){
@@ -169,11 +160,14 @@ function iniciarSistema(){
 
           if(musicasExecutadas[musica]){
             btn.innerText="🔒 "+musica+" (Já executada)";
-            btn.disabled=true;
+            btn.disabled = true;
             btn.classList.add("executada");
-          }else{
-            btn.innerText=musica;
-            btn.onclick=()=>voteMusica(musica);
+          } else if(temporizadores[musica] > 0){
+            btn.disabled = true;
+            btn.innerText = "⏳ Aguarde " + temporizadores[musica] + "s";
+          } else {
+            btn.innerText = musica;
+            btn.onclick = () => voteMusica(musica);
           }
 
           artistaDiv.appendChild(btn);
@@ -203,60 +197,43 @@ function iniciarSistema(){
   }
 
   function voteMusica(musica){
-    if(bloqueado) return;
+    if(temporizadores[musica] > 0) return;
 
-    bloqueado = true;
-    tempoRestante = 30;
-
-    // Incrementa ranking
+    // Vota na música
     database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
 
-    const todosBotoes = document.querySelectorAll("#buttons button[data-nome='"+musica+"']");
+    // Inicia temporizador da música
+    temporizadores[musica] = 30;
+    const intervalo = setInterval(()=>{
+      temporizadores[musica]--;
+      criarBotoes(document.getElementById("searchInput").value.toLowerCase());
 
-    todosBotoes.forEach(btn=>{
-      btn.disabled = true;
-      btn.innerText = "⏳ Aguarde "+tempoRestante+"s";
-    });
-
-    const intervalo = setInterval(() => {
-      tempoRestante--;
-
-      todosBotoes.forEach(btn=>{
-        btn.innerText = "⏳ Aguarde "+tempoRestante+"s";
-      });
-
-      if(tempoRestante <= 0){
+      if(temporizadores[musica] <= 0){
         clearInterval(intervalo);
-        todosBotoes.forEach(btn=>{
-          if(!musicasExecutadas[musica]){
-            btn.disabled = false;
-            btn.innerText = btn.getAttribute("data-nome");
-          }
-        });
-        bloqueado = false;
+        temporizadores[musica] = 0;
+        criarBotoes(document.getElementById("searchInput").value.toLowerCase());
       }
     }, 1000);
 
     criarBotoes(document.getElementById("searchInput").value.toLowerCase());
   }
 
-  document.getElementById("searchInput").addEventListener("input",e=>{
+  document.getElementById("searchInput").addEventListener("input", e=>{
     criarBotoes(e.target.value.toLowerCase());
   });
 
-  database.ref("ranking").on("value",snap=>{
-    const data=snap.val()||{};
-    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
-    let html="";
+  database.ref("ranking").on("value", snap=>{
+    const data = snap.val() || {};
+    const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    let html = "";
     sorted.forEach((item,i)=>{
       html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
     });
-    document.getElementById("rankingList").innerHTML=html;
+    document.getElementById("rankingList").innerHTML = html;
   });
 
   criarBotoes();
 }
-
 </script>
 </body>
-</html>
+  </html>
