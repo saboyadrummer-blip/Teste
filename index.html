@@ -164,7 +164,7 @@ function iniciarSistema(){
             btn.classList.add("executada");
           } else if(temporizadores[musica] > 0){
             btn.disabled = true;
-            btn.innerText = "⏳ Aguarde " + temporizadores[musica] + "s";
+            btn.innerText = musica + " (⏳ " + temporizadores[musica] + "s)";
           } else {
             btn.innerText = musica;
             btn.onclick = () => voteMusica(musica);
@@ -199,10 +199,8 @@ function iniciarSistema(){
   function voteMusica(musica){
     if(temporizadores[musica] > 0) return;
 
-    // Vota na música
     database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
 
-    // Inicia temporizador da música
     temporizadores[musica] = 30;
     const intervalo = setInterval(()=>{
       temporizadores[musica]--;
@@ -236,4 +234,4 @@ function iniciarSistema(){
 }
 </script>
 </body>
-  </html>
+</html>
