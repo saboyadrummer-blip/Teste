@@ -18,7 +18,6 @@ button:disabled { background:gray; cursor:not-allowed; }
 .category { font-size:22px; margin-top:25px; color:#00bfff; text-decoration:underline; }
 .artist { font-weight:bold; margin-top:10px; }
 .executada { background:#444 !important; }
-#bloqueado { font-size:22px; margin-top:40px; }
 </style>
 </head>
 <body>
@@ -26,33 +25,23 @@ button:disabled { background:gray; cursor:not-allowed; }
 <div id="conteudo"></div>
 
 <script>
-
 const firebaseConfig = {
   apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
   authDomain: "totem-12c8a.firebaseapp.com",
   databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
   projectId: "totem-12c8a"
 };
-
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+const db = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
-let votosBloqueados = {}; // só a música votada temporariamente
+let votosBloqueados = {};
 
-database.ref("executadas").on("value", snap => {
-  musicasExecutadas = snap.val() || {};
-  atualizarBotoes(); // atualiza status de executadas em tempo real
-});
-
-database.ref("sistemaStatus").on("value", snap => {
+db.ref("sistemaStatus").on("value", snap => {
   const status = snap.val();
   if(status !== "on"){
-    conteudo.innerHTML = `
-      <h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
-      <div id="bloqueado">🔒 Votação temporariamente indisponível.</div>
-    `;
+    conteudo.innerHTML = `<h1>🎵 Sistema disponível apenas nos shows!</h1><div>🔒 Votação indisponível</div>`;
     return;
   }
 
@@ -63,12 +52,10 @@ database.ref("sistemaStatus").on("value", snap => {
     <h2>Ranking ao Vivo</h2>
     <div id="rankingList"></div>
   `;
-
   iniciarSistema();
 });
 
 function iniciarSistema(){
-
   const container = document.getElementById("buttons");
 
   const musicas = {
@@ -85,56 +72,10 @@ function iniciarSistema(){
     "Clássicos Internacionais": {
       "Elvis Presley":["Suspicious Minds"],
       "The Beatles":["Come Together","Hey Jude","Let It Be"],
-      "Ben E. King":["Stand By Me"],
-      "Pink Floyd":["Wish You Were Here"],
-      "Lynyrd Skynyrd":["Sweet Home Alabama","Simple Man"],
-      "Commodores":["Easy"],
-      "Eric Clapton":["Cocaine"],
       "Queen":["Another One Bites The Dust"],
-      "The Doors":["Roadhouse Blues","Love Me Two Times","Riders On The Storm"],
-      "Cream":["White Room","Sunshine Of Your Love"],
-      "Black Sabbath":["Paranoid"],
-      "Survivor":["Eye Of The Tiger"],
-      "Foghat":["Slow Ride"]
+      "Pink Floyd":["Wish You Were Here"]
     },
-    "Grunge / Alternativo": {
-      "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
-      "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
-      "Alice In Chains":["Man In The Box","Would?","Down In A Hole"],
-      "Stone Temple Pilots":["Plush","Interstate Love Song","Creep","Vasoline"],
-      "The Smashing Pumpkins":["1979","Bullet With Butterfly Wings","Zero"],
-      "Queens of the Stone Age":["No One Knows","Make It Wit Chu"],
-      "Radiohead":["Creep"],
-      "Faith No More":["Ashes to Ashes"],
-      "Silverchair":["Freak"]
-    },
-    "Anos 80 / 90 / 2000": {
-      "U2":["With Or Without You","Helter Skelter"],
-      "INXS":["Never Tear Us Apart","Need You Tonight"],
-      "Phil Collins":["I Don't Care Anymore"],
-      "Tears For Fears":["Everybody Wants To Rule The World"],
-      "Blur":["Coffee & TV"],
-      "Modjo":["Lady"],
-      "Jimmy Cliff":["I Can See Clearly Now"],
-      "Mike + The Mechanics":["Over My Shoulder"],
-      "Sugar Ray":["Every Morning"],
-      "Spin Doctors":["Two Princes"],
-      "Foreigner":["I Want To Know What Love Is"],
-      "The Outfield":["Your Love"],
-      "Lenny Kravitz":["It Ain't Over 'Til It's Over","Fly Away"],
-      "Maroon 5":["Sugar"],
-      "Oasis":["Wonderwall"],
-      "Kings of Leon":["Closer"],
-      "Green Day":["American Idiot"],
-      "Foo Fighters":["Everlong","Learn to Fly"],
-      "The White Stripes":["Seven Nation Army"],
-      "Daft Punk":["Get Lucky"],
-      "Chris Isaak":["Wicked Game"],
-      "Urge Overkill":["Girl, You'll Be a Woman Soon"]
-    },
-    "Soul / Brasil": {
-      "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
-    }
+    "Soul / Brasil": { "Tim Maia":["Gostava Tanto de Você"] }
   };
 
   function criarBotoes(filter=""){
@@ -142,70 +83,66 @@ function iniciarSistema(){
     let encontrou=false;
 
     Object.keys(musicas).forEach(cat=>{
-      let categoriaTemResultado=false;
       let catDiv=document.createElement("div");
+      let catTem=false;
 
       Object.keys(musicas[cat]).forEach(artista=>{
-        let artistaTemResultado=false;
         let artistaDiv=document.createElement("div");
+        let artTem=false;
 
         musicas[cat][artista].forEach(musica=>{
           if(filter && !musica.toLowerCase().includes(filter) && !artista.toLowerCase().includes(filter)) return;
-
           encontrou=true;
-          categoriaTemResultado=true;
-          artistaTemResultado=true;
+          catTem=true;
+          artTem=true;
 
           let btn = document.createElement("button");
           btn.setAttribute("data-nome", musica);
+          btn.setAttribute("id","btn-"+musica.replace(/\s+/g,"_"));
 
           atualizarBotao(btn, musica);
-
           artistaDiv.appendChild(btn);
         });
 
-        if(artistaTemResultado){
-          let artTitle=document.createElement("div");
+        if(artTem){
+          let artTitle = document.createElement("div");
           artTitle.className="artist";
-          artTitle.innerText=artista;
+          artTitle.innerText = artista;
           catDiv.appendChild(artTitle);
           catDiv.appendChild(artistaDiv);
         }
       });
 
-      if(categoriaTemResultado){
-        let catTitle=document.createElement("div");
+      if(catTem){
+        let catTitle = document.createElement("div");
         catTitle.className="category";
-        catTitle.innerText=cat;
+        catTitle.innerText = cat;
         container.appendChild(catTitle);
         container.appendChild(catDiv);
       }
     });
 
-    if(!encontrou){
-      container.innerHTML="<h2>❌ Música não encontrada</h2>";
-    }
+    if(!encontrou) container.innerHTML="<h2>❌ Música não encontrada</h2>";
   }
 
   function atualizarBotao(btn, musica){
     if(musicasExecutadas[musica]){
       btn.innerText="🔒 "+musica+" (Já executada)";
-      btn.disabled = true;
+      btn.disabled=true;
       btn.classList.add("executada");
     } else if(votosBloqueados[musica]){
-      btn.disabled = true;
-      btn.innerText = musica+" ⏳ Aguarde "+votosBloqueados[musica]+"s";
+      btn.innerText=musica+" ⏳ Aguarde "+votosBloqueados[musica]+"s";
+      btn.disabled=true;
     } else {
-      btn.disabled = false;
-      btn.innerText = musica;
-      btn.onclick = ()=>voteMusica(musica, btn);
+      btn.innerText=musica;
+      btn.disabled=false;
+      btn.onclick=()=>voteMusica(musica, btn);
     }
   }
 
   function voteMusica(musica, btn){
     if(votosBloqueados[musica]) return;
-
-    database.ref("ranking/"+musica).transaction(v => (v||0)+1);
+    db.ref("ranking/"+musica).transaction(v=>(v||0)+1);
 
     votosBloqueados[musica] = 30;
     atualizarBotao(btn, musica);
@@ -213,7 +150,6 @@ function iniciarSistema(){
     const interval = setInterval(()=>{
       votosBloqueados[musica]--;
       atualizarBotao(btn, musica);
-
       if(votosBloqueados[musica]<=0){
         clearInterval(interval);
         delete votosBloqueados[musica];
@@ -226,19 +162,28 @@ function iniciarSistema(){
     criarBotoes(e.target.value.toLowerCase());
   });
 
-  database.ref("ranking").on("value", snap=>{
+  // Atualiza botões em tempo real quando o admin marca executadas
+  db.ref("executadas").on("child_added", snap=>{
+    musicasExecutadas[snap.key] = true;
+    const btn = document.getElementById("btn-"+snap.key.replace(/\s+/g,"_"));
+    if(btn) atualizarBotao(btn, snap.key);
+  });
+  db.ref("executadas").on("child_removed", snap=>{
+    delete musicasExecutadas[snap.key];
+    const btn = document.getElementById("btn-"+snap.key.replace(/\s+/g,"_"));
+    if(btn) atualizarBotao(btn, snap.key);
+  });
+
+  db.ref("ranking").on("value", snap=>{
     const data = snap.val()||{};
     const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
     let html="";
-    sorted.forEach((item,i)=>{
-      html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
-    });
+    sorted.forEach((item,i)=>html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>");
     document.getElementById("rankingList").innerHTML = html;
   });
 
   criarBotoes();
 }
-
 </script>
 </body>
 </html>
