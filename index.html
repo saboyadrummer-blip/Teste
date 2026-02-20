@@ -25,25 +25,12 @@ button:disabled { background:gray; cursor:not-allowed; }
 
 <div id="conteudo"></div>
 
-<button onclick="copyCode()" style="margin-top:30px;padding:10px 15px;font-size:16px;">📋 Copiar Código</button>
-
 <script>
-
-function copyCode(){
-  const el = document.createElement('textarea');
-  el.value = document.documentElement.outerHTML;
-  document.body.appendChild(el);
-  el.select();
-  document.execCommand('copy');
-  document.body.removeChild(el);
-  alert("Código copiado!");
-}
-
 const firebaseConfig = {
-apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
-authDomain: "totem-12c8a.firebaseapp.com",
-databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
-projectId: "totem-12c8a"
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -51,12 +38,11 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
-let bloqueado = false;
-let tempoRestante = 0;
+let bloqueadoMusicas = {}; // temporizador por música
 
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
-  atualizarBotoes();
+  criarBotoes(document.getElementById("searchInput")?.value?.toLowerCase() || "");
 });
 
 database.ref("sistemaStatus").on("value", snap => {
@@ -68,6 +54,7 @@ database.ref("sistemaStatus").on("value", snap => {
     `;
     return;
   }
+
   conteudo.innerHTML = `
     <h1>Escolha a próxima música</h1>
     <input type="text" id="searchInput" placeholder="🔍 Buscar música ou artista">
@@ -75,6 +62,7 @@ database.ref("sistemaStatus").on("value", snap => {
     <h2>Ranking ao Vivo</h2>
     <div id="rankingList"></div>
   `;
+
   iniciarSistema();
 });
 
@@ -82,7 +70,6 @@ function iniciarSistema(){
   const container = document.getElementById("buttons");
 
   const musicas = {
-
     "Rock Nacional": {
       "Os Paralamas do Sucesso":["Meu Erro"],
       "Skank":["Garota Nacional","Sutilmente"],
@@ -93,7 +80,6 @@ function iniciarSistema(){
       "Titãs":["Pra Dizer Adeus"],
       "Lobão":["Me Chama","Rádio Blá"]
     },
-
     "Clássicos Internacionais": {
       "Elvis Presley":["Suspicious Minds"],
       "The Beatles":["Come Together","Hey Jude","Let It Be"],
@@ -109,7 +95,6 @@ function iniciarSistema(){
       "Survivor":["Eye Of The Tiger"],
       "Foghat":["Slow Ride"]
     },
-
     "Grunge / Alternativo": {
       "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
       "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
@@ -121,7 +106,6 @@ function iniciarSistema(){
       "Faith No More":["Ashes to Ashes"],
       "Silverchair":["Freak"]
     },
-
     "Anos 80 / 90 / 2000": {
       "U2":["With Or Without You","Helter Skelter"],
       "INXS":["Never Tear Us Apart","Need You Tonight"],
@@ -146,11 +130,9 @@ function iniciarSistema(){
       "Chris Isaak":["Wicked Game"],
       "Urge Overkill":["Girl, You'll Be a Woman Soon"]
     },
-
     "Soul / Brasil": {
       "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
     }
-
   };
 
   function criarBotoes(filter=""){
@@ -175,13 +157,18 @@ function iniciarSistema(){
           const btn=document.createElement("button");
           btn.setAttribute("data-nome", musica);
 
+          // Música executada
           if(musicasExecutadas[musica]){
             btn.innerText="🔒 "+musica+" (Já executada)";
-            btn.disabled=true;
+            btn.disabled = true;
             btn.classList.add("executada");
+          } else if(bloqueadoMusicas[musica]){
+            // Temporizador ativo
+            btn.disabled = true;
+            btn.innerText = musica+" ⏳ Aguarde "+bloqueadoMusicas[musica]+"s";
           } else {
-            btn.innerText=musica;
-            btn.onclick=()=>voteMusica(musica);
+            btn.innerText = musica;
+            btn.onclick = () => voteMusica(musica);
           }
 
           artistaDiv.appendChild(btn);
@@ -211,33 +198,25 @@ function iniciarSistema(){
   }
 
   function voteMusica(musica){
-    if(bloqueado) return;
+    if(bloqueadoMusicas[musica] || musicasExecutadas[musica]) return;
 
-    bloqueado = true;
-    tempoRestante = 30;
-
-    const btns = document.querySelectorAll("#buttons button[data-nome='"+musica+"']");
-    btns.forEach(btn=>{
-      btn.disabled = true;
-      btn.innerText = musica + " ⏳ Aguarde "+tempoRestante+"s";
-    });
-
+    // Incrementa ranking
     database.ref("ranking/"+musica).transaction(v => (v||0)+1);
 
-    const interval = setInterval(()=>{
-      tempoRestante--;
-      btns.forEach(btn=>{
-        btn.innerText = musica + " ⏳ Aguarde "+tempoRestante+"s";
-      });
-      if(tempoRestante <= 0){
-        clearInterval(interval);
-        btns.forEach(btn=>{
-          if(!musicasExecutadas[musica]){
-            btn.disabled = false;
-            btn.innerText = musica;
-          }
-        });
-        bloqueado = false;
+    // Ativa temporizador só para essa música
+    let tempo = 30;
+    bloqueadoMusicas[musica] = tempo;
+    criarBotoes(document.getElementById("searchInput").value.toLowerCase());
+
+    const intervalo = setInterval(()=>{
+      tempo--;
+      bloqueadoMusicas[musica] = tempo;
+      criarBotoes(document.getElementById("searchInput").value.toLowerCase());
+
+      if(tempo<=0){
+        clearInterval(intervalo);
+        delete bloqueadoMusicas[musica];
+        criarBotoes(document.getElementById("searchInput").value.toLowerCase());
       }
     },1000);
   }
@@ -247,7 +226,7 @@ function iniciarSistema(){
   });
 
   database.ref("ranking").on("value", snap=>{
-    const data = snap.val()||{};
+    const data = snap.val() || {};
     const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
     let html="";
     sorted.forEach((item,i)=>{
@@ -256,25 +235,8 @@ function iniciarSistema(){
     document.getElementById("rankingList").innerHTML = html;
   });
 
-  function atualizarBotoes(){
-    const allBtns = document.querySelectorAll("#buttons button");
-    allBtns.forEach(btn=>{
-      const musica = btn.getAttribute("data-nome");
-      if(musicasExecutadas[musica]){
-        btn.disabled = true;
-        btn.classList.add("executada");
-        btn.innerText = "🔒 "+musica+" (Já executada)";
-      } else if(!bloqueado){
-        btn.disabled = false;
-        btn.innerText = musica;
-        btn.classList.remove("executada");
-      }
-    });
-  }
-
   criarBotoes();
 }
-
 </script>
 </body>
 </html>
