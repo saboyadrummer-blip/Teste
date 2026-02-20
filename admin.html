@@ -25,13 +25,14 @@ button:disabled { background:gray; cursor:not-allowed; }
 
 <div id="conteudo"></div>
 
-<script>
+<button id="copiarCodigoBtn" style="background:#00bfff;color:#000;padding:10px 15px;border-radius:10px;margin-top:20px;">Copiar código</button>
 
+<script>
 const firebaseConfig = {
-apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
-authDomain: "totem-12c8a.firebaseapp.com",
-databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
-projectId: "totem-12c8a"
+  apiKey: "AIzaSyCxpYTjgDElVqhhG-OUXJGIWXapifaZ9Zw",
+  authDomain: "totem-12c8a.firebaseapp.com",
+  databaseURL: "https://totem-12c8a-default-rtdb.firebaseio.com",
+  projectId: "totem-12c8a"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -39,21 +40,19 @@ const database = firebase.database();
 const conteudo = document.getElementById("conteudo");
 
 let musicasExecutadas = {};
-let temporizadores = {}; // Temporizadores individuais por música
+let votosTemporizador = {};
 
+// Atualiza música executada em tempo real
 database.ref("executadas").on("value", snap => {
   musicasExecutadas = snap.val() || {};
-  atualizarBotoes();
+  criarBotoes(document.getElementById("searchInput") ? document.getElementById("searchInput").value.toLowerCase() : "");
 });
 
+// Status do sistema
 database.ref("sistemaStatus").on("value", snap => {
   const status = snap.val();
-
   if(status !== "on"){
-    conteudo.innerHTML = `
-      <h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1>
-      <div id="bloqueado">🔒 Votação temporariamente indisponível.</div>
-    `;
+    conteudo.innerHTML = `<h1>🎵 Sistema disponível apenas nos shows, volte sempre!</h1><div id="bloqueado">🔒 Votação temporariamente indisponível.</div>`;
     return;
   }
 
@@ -72,7 +71,6 @@ function iniciarSistema(){
   const container = document.getElementById("buttons");
 
   const musicas = {
-
     "Rock Nacional": {
       "Os Paralamas do Sucesso":["Meu Erro"],
       "Skank":["Garota Nacional","Sutilmente"],
@@ -83,7 +81,6 @@ function iniciarSistema(){
       "Titãs":["Pra Dizer Adeus"],
       "Lobão":["Me Chama","Rádio Blá"]
     },
-
     "Clássicos Internacionais": {
       "Elvis Presley":["Suspicious Minds"],
       "The Beatles":["Come Together","Hey Jude","Let It Be"],
@@ -99,7 +96,6 @@ function iniciarSistema(){
       "Survivor":["Eye Of The Tiger"],
       "Foghat":["Slow Ride"]
     },
-
     "Grunge / Alternativo": {
       "Nirvana":["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","About A Girl","Drain You"],
       "Pearl Jam":["Soldier of Love","Last Kiss","Black"],
@@ -111,7 +107,6 @@ function iniciarSistema(){
       "Faith No More":["Ashes to Ashes"],
       "Silverchair":["Freak"]
     },
-
     "Anos 80 / 90 / 2000": {
       "U2":["With Or Without You","Helter Skelter"],
       "INXS":["Never Tear Us Apart","Need You Tonight"],
@@ -136,11 +131,9 @@ function iniciarSistema(){
       "Chris Isaak":["Wicked Game"],
       "Urge Overkill":["Girl, You'll Be a Woman Soon"]
     },
-
     "Soul / Brasil": {
       "Tim Maia":["Gostava Tanto de Você","Primavera (Vai Chuva)"]
     }
-
   };
 
   function criarBotoes(filter=""){
@@ -165,14 +158,16 @@ function iniciarSistema(){
           const btn=document.createElement("button");
           btn.setAttribute("data-nome", musica);
 
-          // Botão música executada
           if(musicasExecutadas[musica]){
             btn.innerText="🔒 "+musica+" (Já executada)";
             btn.disabled=true;
             btn.classList.add("executada");
+          } else if(votosTemporizador[musica]){
+            btn.disabled = true;
+            btn.innerText = musica + " ⏳ Aguarde " + votosTemporizador[musica] + "s";
           } else {
             btn.innerText = musica;
-            btn.onclick = () => voteMusica(musica, btn);
+            btn.onclick = ()=> voteMusica(musica);
           }
 
           artistaDiv.appendChild(btn);
@@ -201,42 +196,33 @@ function iniciarSistema(){
     }
   }
 
-  function voteMusica(musica, btn){
-    // Se já existe temporizador ativo para essa música, bloqueia apenas este botão
-    if(temporizadores[musica]) return;
+  function voteMusica(musica){
+    if(votosTemporizador[musica]) return;
 
-    database.ref("ranking/"+musica).transaction(v => (v || 0) + 1);
+    votosTemporizador[musica] = 30;
 
-    let tempo = 30;
-    const originalText = btn.innerText;
+    database.ref("ranking/"+musica).transaction(v => (v||0)+1);
 
-    btn.disabled = true;
-    temporizadores[musica] = setInterval(()=>{
-      tempo--;
-      btn.innerText = musica + " ⏳ Aguarde " + tempo + "s";
-      if(tempo <= 0){
-        clearInterval(temporizadores[musica]);
-        delete temporizadores[musica];
-        if(!musicasExecutadas[musica]){
-          btn.disabled = false;
-          btn.innerText = musica;
-        }
+    const intervalo = setInterval(()=>{
+      votosTemporizador[musica]--;
+      criarBotoes(document.getElementById("searchInput").value.toLowerCase());
+      if(votosTemporizador[musica]<=0){
+        clearInterval(intervalo);
+        delete votosTemporizador[musica];
+        criarBotoes(document.getElementById("searchInput").value.toLowerCase());
       }
     },1000);
+
+    criarBotoes(document.getElementById("searchInput").value.toLowerCase());
   }
 
-  function atualizarBotoes(){
-    const searchFilter = document.getElementById("searchInput")?.value.toLowerCase() || "";
-    criarBotoes(searchFilter);
-  }
-
-  document.getElementById("searchInput").addEventListener("input",e=>{
+  document.getElementById("searchInput").addEventListener("input", e=>{
     criarBotoes(e.target.value.toLowerCase());
   });
 
-  database.ref("ranking").on("value",snap=>{
-    const data=snap.val()||{};
-    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  database.ref("ranking").on("value", snap=>{
+    const data = snap.val()||{};
+    const sorted = Object.entries(data).sort((a,b)=>b[1]-a[1]);
     let html="";
     sorted.forEach((item,i)=>{
       html+="<div class='rankItem'>"+(i+1)+"º - "+item[0]+" ("+item[1]+" votos)</div>";
@@ -246,6 +232,13 @@ function iniciarSistema(){
 
   criarBotoes();
 }
+
+// Copiar código
+document.getElementById("copiarCodigoBtn").addEventListener("click", ()=>{
+  navigator.clipboard.writeText(document.documentElement.outerHTML)
+  .then(()=> alert("Código copiado para a área de transferência!"))
+  .catch(()=> alert("Falha ao copiar o código."));
+});
 
 </script>
 </body>
